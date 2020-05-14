@@ -18,30 +18,21 @@ export IRONIC_INSPECTOR_ENDPOINT=http://localhost:5050/v1/
 export GO111MODULE=on
 export GOFLAGS=
 
+##
+## To auto-generate help text, include a comment starting with "##" on
+## the line with the target, as below for the "help" target.
+##
 .PHONY: help
-help:
-	@echo "Targets:"
-	@echo "  test             -- run unit tests and linter"
-	@echo "  unit             -- run the unit tests"
-	@echo "  unit-cover       -- run the unit tests and write code coverage statistics to console"
-	@echo "  unit-cover-html  -- run the unit tests and open code coverage statistics in a browser"
-	@echo "  lint             -- run the linter"
-	@echo "  e2e-local        -- run end-to-end tests locally"
-	@echo "  help             -- this help output"
-	@echo
-	@echo "Variables:"
-	@echo "  TEST_NAMESPACE   -- project name to use ($(TEST_NAMESPACE))"
-	@echo "  SETUP            -- controls the --no-setup flag ($(SETUP))"
-	@echo "  GO_TEST_FLAGS    -- flags to pass to --go-test-flags ($(GO_TEST_FLAGS))"
-	@echo "  DEBUG            -- debug flag, if any ($(DEBUG))"
+help:  ## Display this help
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
-.PHONY: test
+.PHONY: test ## Run local developer tests
 test: generate lint lint-gofmt unit
 
-.PHONY: lint-all
+.PHONY: lint-all ## Run all linter checks
 lint-all: lint gosec lint-generate lint-gofmt govet markdownlint shellcheck
 
-.PHONY: generate
+.PHONY: generate ## Run code generator for go, CRD, and OpenAPI
 generate: bin/operator-sdk
 	./bin/operator-sdk generate $(VERBOSE) k8s
 	./bin/operator-sdk generate $(VERBOSE) crds
@@ -60,15 +51,15 @@ bin:
 	mkdir -p bin
 
 .PHONY: unit
-unit:
+unit: ## Run unit tests
 	./hack/unit.sh
 
 .PHONY: unit-local
-unit-local:
+unit-local: ## Run unit tests outside of a container
 	go test $(GO_TEST_FLAGS) ./cmd/... ./pkg/...
 
 .PHONY: unit-cover
-unit-cover:
+unit-cover: ## Run unit tests outside of a container with coverage
 	go test -coverprofile=cover.out $(GO_TEST_FLAGS) ./cmd/... ./pkg/...
 	go tool cover -func=cover.out
 
@@ -78,11 +69,11 @@ unit-cover-html:
 	go tool cover -html=cover.out
 
 .PHONY: lint
-lint:
+lint: ## Run go lint
 	./hack/golint.sh
 
 .PHONY: lint-generate
-lint-generate:
+lint-generate: ## Run the code generator and error if it makes any changes
 	./hack/generate.sh
 
 .PHONY: lint-generate-local
@@ -90,27 +81,27 @@ lint-generate-local:
 	IS_CONTAINER=local ./hack/generate.sh
 
 .PHONY: gosec
-gosec:
+gosec: ## Run gosec
 	./hack/gosec.sh
 
 .PHONY: gofmt
-gofmt:
+gofmt: ## Run gofmt and let it update files locally
 	gofmt -l -w ./pkg ./cmd
 
 .PHONY: lint-gofmt
-lint-gofmt:
+lint-gofmt: ## Run gofmt and error if it makes any changes
 	./hack/gofmt.sh
 
 .PHONY: govet
-govet:
+govet: ## Run govet
 	./hack/govet.sh
 
 .PHONY: markdownlint
-markdownlint:
+markdownlint: ## Run markdown text linter
 	./hack/markdownlint.sh
 
 .PHONY: shellcheck
-shellcheck:
+shellcheck: ## Run shell script linter
 	./hack/shellcheck.sh
 
 .PHONY: docs
@@ -127,20 +118,20 @@ e2e-local:
 		$(DEBUG) --go-test-flags "$(GO_TEST_FLAGS)"
 
 .PHONY: run
-run:
+run: ## Run the operator outside of a cluster in developer mode
 	operator-sdk run --local \
 		--go-ldflags=$(LDFLAGS) \
 		--watch-namespace=$(RUN_NAMESPACE) \
 		--operator-flags="-dev"
 
 .PHONY: demo
-demo:
+demo: ## Run the operator outside of a cluster using the demo driver
 	operator-sdk run --local \
 		--go-ldflags=$(LDFLAGS) \
 		--watch-namespace=$(RUN_NAMESPACE) \
 		--operator-flags="-dev -demo-mode"
 
-.PHONY: docker
+.PHONY: docker ## Build docker images
 docker: docker-operator docker-sdk
 
 .PHONY: docker-operator
@@ -152,7 +143,7 @@ docker-sdk:
 	docker build . -f hack/Dockerfile.operator-sdk
 
 .PHONY: build
-build:
+build: ## Build the operator binary
 	@echo LDFLAGS=$(LDFLAGS)
 	go build -o build/_output/bin/baremetal-operator cmd/manager/main.go
 

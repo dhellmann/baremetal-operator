@@ -36,7 +36,10 @@ help:
 	@echo "  DEBUG            -- debug flag, if any ($(DEBUG))"
 
 .PHONY: test
-test: generate unit lint
+test: generate lint lint-gofmt unit
+
+.PHONY: lint-all
+lint-all: lint gosec lint-generate lint-gofmt govet markdownlint shellcheck
 
 .PHONY: generate
 generate: bin/operator-sdk
@@ -75,42 +78,39 @@ unit-cover-html:
 	go tool cover -html=cover.out
 
 .PHONY: lint
-lint: gosec-check golint-check generate-check gofmt-check govet-check markdownlint-check shellcheck-check
-
-.PHONY: golint-check
-golint-check:
+lint:
 	./hack/golint.sh
 
-.PHONY: generate-check
-generate-check:
+.PHONY: lint-generate
+lint-generate:
 	./hack/generate.sh
 
-.PHONY: generate-check-local
-generate-check-local:
+.PHONY: lint-generate-local
+lint-generate-local:
 	IS_CONTAINER=local ./hack/generate.sh
 
-.PHONY: gosec-check
-gosec-check:
+.PHONY: gosec
+gosec:
 	./hack/gosec.sh
 
 .PHONY: gofmt
 gofmt:
 	gofmt -l -w ./pkg ./cmd
 
-.PHONY: gofmt-check
-gofmt-check:
+.PHONY: lint-gofmt
+lint-gofmt:
 	./hack/gofmt.sh
 
-.PHONY: govet-check
-govet-check:
+.PHONY: govet
+govet:
 	./hack/govet.sh
 
-.PHONY: markdownlint-check
-markdownlint-check:
+.PHONY: markdownlint
+markdownlint:
 	./hack/markdownlint.sh
 
-.PHONY: shellcheck-check
-shellcheck-check:
+.PHONY: shellcheck
+shellcheck:
 	./hack/shellcheck.sh
 
 .PHONY: docs

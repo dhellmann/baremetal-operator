@@ -30,7 +30,7 @@ help:  ## Display this help
 test: generate lint lint-gofmt unit
 
 .PHONY: lint-all ## Run all linter checks
-lint-all: lint gosec lint-generate lint-gofmt govet markdownlint shellcheck
+lint-all: lint gosec lint-generate lint-gofmt vet markdownlint shellcheck
 
 .PHONY: generate ## Run code generator for go, CRD, and OpenAPI
 generate: bin/operator-sdk
@@ -92,8 +92,8 @@ gofmt: ## Run gofmt and let it update files locally
 lint-gofmt: ## Run gofmt and error if it makes any changes
 	./hack/gofmt.sh
 
-.PHONY: govet
-govet: ## Run govet
+.PHONY: vet
+vet: ## Run go vet
 	./hack/govet.sh
 
 .PHONY: markdownlint

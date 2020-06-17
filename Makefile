@@ -36,7 +36,7 @@ generate: bin/operator-sdk ## Run the operator-sdk code generator
 	./bin/operator-sdk generate $(VERBOSE) k8s
 	./bin/operator-sdk generate $(VERBOSE) crds
 	openapi-gen \
-		--input-dirs ./pkg/apis/metal3/v1alpha1 \
+		--input-dirs ./pkg/apis/metal3/v1alpha1,./pkg/apis/metal3/v1alpha2 \
 		--output-package ./pkg/apis/metal3 \
 		--output-base "" \
 		--output-file-base zz_generated.openapi \

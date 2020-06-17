@@ -52,7 +52,7 @@ type BareMetalHostSpec struct {
 	ConsumerRef *corev1.ObjectReference `json:"consumerRef,omitempty"`
 
 	// Image holds the details of the image to be provisioned.
-	Image *Image `json:"image,omitempty"`
+	Image *metal3shared.Image `json:"image,omitempty"`
 
 	// UserData holds the reference to the Secret containing the user
 	// data to be passed to the host before it boots.
@@ -75,25 +75,6 @@ type BareMetalHostSpec struct {
 	// the power status and hardware inventory inspection. If the
 	// Image field is filled in, this field is ignored.
 	ExternallyProvisioned bool `json:"externallyProvisioned,omitempty"`
-}
-
-// Image holds the details of an image either to provisioned or that
-// has been provisioned.
-type Image struct {
-	// URL is a location of an image to deploy.
-	URL string `json:"url"`
-
-	// Checksum is the checksum for the image.
-	Checksum string `json:"checksum"`
-
-	// ChecksumType is the checksum algorithm for the image.
-	// e.g md5, sha256, sha512
-	ChecksumType metal3shared.ChecksumType `json:"checksumType,omitempty"`
-
-	// DiskFormat contains the format of the image (raw, qcow2, ...)
-	// Needs to be set to raw for raw images streaming
-	// +kubebuilder:validation:Enum=raw;qcow2;vdi;vmdk
-	DiskFormat *string `json:"format,omitempty"`
 }
 
 // FIXME(dhellmann): We probably want some other module to own these
@@ -346,7 +327,7 @@ type ProvisionStatus struct {
 
 	// Image holds the details of the last image successfully
 	// provisioned to the host.
-	Image Image `json:"image,omitempty"`
+	Image metal3shared.Image `json:"image,omitempty"`
 
 	// The RootDevicehints set by the user
 	RootDeviceHints *metal3shared.RootDeviceHints `json:"rootDeviceHints,omitempty"`

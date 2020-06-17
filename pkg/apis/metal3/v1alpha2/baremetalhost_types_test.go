@@ -130,7 +130,7 @@ func TestHostNeedsHardwareInspection(t *testing.T) {
 				},
 				Status: BareMetalHostStatus{
 					Provisioning: ProvisionStatus{
-						Image: Image{
+						Image: metal3shared.Image{
 							URL: "not-empty",
 						},
 					},
@@ -182,7 +182,7 @@ func TestHostNeedsProvisioning(t *testing.T) {
 					Namespace: "myns",
 				},
 				Spec: BareMetalHostSpec{
-					Image:  &Image{},
+					Image:  &metal3shared.Image{},
 					Online: true,
 				},
 			},
@@ -197,7 +197,7 @@ func TestHostNeedsProvisioning(t *testing.T) {
 					Namespace: "myns",
 				},
 				Spec: BareMetalHostSpec{
-					Image: &Image{
+					Image: &metal3shared.Image{
 						URL: "not-empty",
 					},
 					Online: true,
@@ -214,7 +214,7 @@ func TestHostNeedsProvisioning(t *testing.T) {
 					Namespace: "myns",
 				},
 				Spec: BareMetalHostSpec{
-					Image: &Image{
+					Image: &metal3shared.Image{
 						URL: "not-empty",
 					},
 					Online: false,
@@ -231,14 +231,14 @@ func TestHostNeedsProvisioning(t *testing.T) {
 					Namespace: "myns",
 				},
 				Spec: BareMetalHostSpec{
-					Image: &Image{
+					Image: &metal3shared.Image{
 						URL: "not-empty",
 					},
 					Online: true,
 				},
 				Status: BareMetalHostStatus{
 					Provisioning: ProvisionStatus{
-						Image: Image{
+						Image: metal3shared.Image{
 							URL: "also-not-empty",
 						},
 					},
@@ -256,14 +256,14 @@ func TestHostNeedsProvisioning(t *testing.T) {
 				},
 				Spec: BareMetalHostSpec{
 					ExternallyProvisioned: true,
-					Image: &Image{
+					Image: &metal3shared.Image{
 						URL: "not-empty",
 					},
 					Online: true,
 				},
 				Status: BareMetalHostStatus{
 					Provisioning: ProvisionStatus{
-						Image: Image{
+						Image: metal3shared.Image{
 							URL: "also-not-empty",
 						},
 					},
@@ -299,7 +299,7 @@ func TestHostNeedsDeprovisioning(t *testing.T) {
 					Namespace: "myns",
 				},
 				Spec: BareMetalHostSpec{
-					Image: &Image{
+					Image: &metal3shared.Image{
 						URL: "not-empty",
 					},
 					Online: true,
@@ -316,7 +316,7 @@ func TestHostNeedsDeprovisioning(t *testing.T) {
 					Namespace: "myns",
 				},
 				Spec: BareMetalHostSpec{
-					Image:  &Image{},
+					Image:  &metal3shared.Image{},
 					Online: true,
 				},
 			},
@@ -345,7 +345,7 @@ func TestHostNeedsDeprovisioning(t *testing.T) {
 					Namespace: "myns",
 				},
 				Spec: BareMetalHostSpec{
-					Image: &Image{
+					Image: &metal3shared.Image{
 						URL: "not-empty",
 					},
 					Online: false,
@@ -362,14 +362,14 @@ func TestHostNeedsDeprovisioning(t *testing.T) {
 					Namespace: "myns",
 				},
 				Spec: BareMetalHostSpec{
-					Image: &Image{
+					Image: &metal3shared.Image{
 						URL: "same",
 					},
 					Online: true,
 				},
 				Status: BareMetalHostStatus{
 					Provisioning: ProvisionStatus{
-						Image: Image{
+						Image: metal3shared.Image{
 							URL: "same",
 						},
 					},
@@ -390,7 +390,7 @@ func TestHostNeedsDeprovisioning(t *testing.T) {
 				},
 				Status: BareMetalHostStatus{
 					Provisioning: ProvisionStatus{
-						Image: Image{
+						Image: metal3shared.Image{
 							URL: "same",
 						},
 					},
@@ -407,14 +407,14 @@ func TestHostNeedsDeprovisioning(t *testing.T) {
 					Namespace: "myns",
 				},
 				Spec: BareMetalHostSpec{
-					Image: &Image{
+					Image: &metal3shared.Image{
 						URL: "not-empty",
 					},
 					Online: true,
 				},
 				Status: BareMetalHostStatus{
 					Provisioning: ProvisionStatus{
-						Image: Image{
+						Image: metal3shared.Image{
 							URL: "also-not-empty",
 						},
 					},
@@ -546,7 +546,7 @@ func TestGetImageChecksum(t *testing.T) {
 					Namespace: "myns",
 				},
 				Spec: BareMetalHostSpec{
-					Image: &Image{
+					Image: &metal3shared.Image{
 						Checksum:     "md5hash",
 						ChecksumType: metal3shared.MD5,
 					},
@@ -562,7 +562,7 @@ func TestGetImageChecksum(t *testing.T) {
 					Namespace: "myns",
 				},
 				Spec: BareMetalHostSpec{
-					Image: &Image{
+					Image: &metal3shared.Image{
 						Checksum: "md5hash",
 					},
 				},
@@ -577,7 +577,7 @@ func TestGetImageChecksum(t *testing.T) {
 					Namespace: "myns",
 				},
 				Spec: BareMetalHostSpec{
-					Image: &Image{
+					Image: &metal3shared.Image{
 						Checksum:     "sha256hash",
 						ChecksumType: metal3shared.SHA256,
 					},
@@ -593,7 +593,7 @@ func TestGetImageChecksum(t *testing.T) {
 					Namespace: "myns",
 				},
 				Spec: BareMetalHostSpec{
-					Image: &Image{
+					Image: &metal3shared.Image{
 						Checksum:     "sha512hash",
 						ChecksumType: metal3shared.SHA512,
 					},
@@ -609,7 +609,7 @@ func TestGetImageChecksum(t *testing.T) {
 					Namespace: "myns",
 				},
 				Spec: BareMetalHostSpec{
-					Image: &Image{
+					Image: &metal3shared.Image{
 						ChecksumType: metal3shared.SHA512,
 					},
 				},
@@ -624,7 +624,7 @@ func TestGetImageChecksum(t *testing.T) {
 					Namespace: "myns",
 				},
 				Spec: BareMetalHostSpec{
-					Image: &Image{
+					Image: &metal3shared.Image{
 						URL: "someurl",
 					},
 				},
@@ -639,7 +639,7 @@ func TestGetImageChecksum(t *testing.T) {
 					Namespace: "myns",
 				},
 				Spec: BareMetalHostSpec{
-					Image: &Image{
+					Image: &metal3shared.Image{
 						Checksum:     "somehash",
 						ChecksumType: "boondoggle",
 					},

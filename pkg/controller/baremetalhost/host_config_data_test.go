@@ -215,7 +215,7 @@ func TestProvisionWithHostConfig(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Scenario, func(t *testing.T) {
-			tc.Host.Spec.Image = &metal3.Image{
+			tc.Host.Spec.Image = &metal3shared.Image{
 				URL:      "https://example.com/image-name",
 				Checksum: "12345",
 			}

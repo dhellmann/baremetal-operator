@@ -115,7 +115,7 @@ func TestDemoReady(t *testing.T) {
 // that it is being provisioned
 func TestDemoProvisioning(t *testing.T) {
 	host := newDefaultNamedHost(demo.ProvisioningHost, t)
-	host.Spec.Image = &metal3.Image{
+	host.Spec.Image = &metal3shared.Image{
 		URL:      "a-url",
 		Checksum: "a-checksum",
 	}
@@ -138,7 +138,7 @@ func TestDemoProvisioning(t *testing.T) {
 // that it has been provisioned
 func TestDemoProvisioned(t *testing.T) {
 	host := newDefaultNamedHost(demo.ProvisionedHost, t)
-	host.Spec.Image = &metal3.Image{
+	host.Spec.Image = &metal3shared.Image{
 		URL:      "a-url",
 		Checksum: "a-checksum",
 	}
@@ -161,7 +161,7 @@ func TestDemoProvisioned(t *testing.T) {
 // reports that it had and error while being provisioned
 func TestDemoValidationError(t *testing.T) {
 	host := newDefaultNamedHost(demo.ValidationErrorHost, t)
-	host.Spec.Image = &metal3.Image{
+	host.Spec.Image = &metal3shared.Image{
 		URL:      "a-url",
 		Checksum: "a-checksum",
 	}

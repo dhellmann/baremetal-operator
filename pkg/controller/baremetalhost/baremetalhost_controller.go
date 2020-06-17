@@ -657,7 +657,7 @@ func (r *ReconcileBareMetalHost) actionDeprovisioning(prov provisioner.Provision
 
 	// After the provisioner is done, clear the provisioning settings
 	// so we transition to the next state.
-	info.host.Status.Provisioning.Image = metal3.Image{}
+	info.host.Status.Provisioning.Image = metal3shared.Image{}
 	clearHostProvisioningSettings(info.host)
 
 	return actionComplete{}

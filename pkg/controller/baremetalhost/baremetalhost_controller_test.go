@@ -206,7 +206,7 @@ func TestStatusAnnotation_EmptyStatus(t *testing.T) {
 		metal3shared.StatusAnnotation: statusAnnotation,
 	}
 	host.Spec.Online = true
-	host.Spec.Image = &metal3.Image{URL: "foo", Checksum: "123"}
+	host.Spec.Image = &metal3shared.Image{URL: "foo", Checksum: "123"}
 
 	r := newTestReconciler(host)
 
@@ -230,7 +230,7 @@ func TestStatusAnnotation_StatusPresent(t *testing.T) {
 	host.Spec.Online = true
 	time := metav1.Now()
 	host.Status.LastUpdated = &time
-	host.Status.Provisioning.Image = metal3.Image{URL: "foo", Checksum: "123"}
+	host.Status.Provisioning.Image = metal3shared.Image{URL: "foo", Checksum: "123"}
 	r := newTestReconciler(host)
 
 	tryReconcile(t, r, host,
@@ -266,7 +266,7 @@ func TestStatusAnnotation_Partial(t *testing.T) {
 		metal3shared.StatusAnnotation: string(packedStatus),
 	}
 	host.Spec.Online = true
-	host.Spec.Image = &metal3.Image{URL: "foo", Checksum: "123"}
+	host.Spec.Image = &metal3shared.Image{URL: "foo", Checksum: "123"}
 
 	r := newTestReconciler(host)
 
@@ -284,7 +284,7 @@ func TestStatusAnnotation_Partial(t *testing.T) {
 func TestStatusAnnotation(t *testing.T) {
 	host := newDefaultHost(t)
 	host.Spec.Online = true
-	host.Spec.Image = &metal3.Image{URL: "foo", Checksum: "123"}
+	host.Spec.Image = &metal3shared.Image{URL: "foo", Checksum: "123"}
 	bmcSecret := newBMCCredsSecret(defaultSecretName, "User", "Pass")
 	r := newTestReconciler(host, bmcSecret)
 
@@ -412,7 +412,7 @@ func TestRebootWithSuffixlessAnnotation(t *testing.T) {
 	host.Status.PoweredOn = true
 	host.Status.Provisioning.State = metal3shared.StateProvisioned
 	host.Spec.Online = true
-	host.Spec.Image = &metal3.Image{URL: "foo", Checksum: "123"}
+	host.Spec.Image = &metal3shared.Image{URL: "foo", Checksum: "123"}
 	host.Spec.Image.URL = "foo"
 	host.Status.Provisioning.Image.URL = "foo"
 
@@ -471,7 +471,7 @@ func TestRebootWithSuffixedAnnotation(t *testing.T) {
 	host.Status.PoweredOn = true
 	host.Status.Provisioning.State = metal3shared.StateProvisioned
 	host.Spec.Online = true
-	host.Spec.Image = &metal3.Image{URL: "foo", Checksum: "123"}
+	host.Spec.Image = &metal3shared.Image{URL: "foo", Checksum: "123"}
 	host.Spec.Image.URL = "foo"
 	host.Status.Provisioning.Image.URL = "foo"
 
@@ -878,7 +878,7 @@ func TestNeedsProvisioning(t *testing.T) {
 		t.Fatal("host without spec image should not need provisioning")
 	}
 
-	host.Spec.Image = &metal3.Image{
+	host.Spec.Image = &metal3shared.Image{
 		URL:      "https://example.com/image-name",
 		Checksum: "12345",
 	}
@@ -904,7 +904,7 @@ func TestNeedsProvisioning(t *testing.T) {
 // status block is filled in for provisioned hosts.
 func TestProvision(t *testing.T) {
 	host := newDefaultHost(t)
-	host.Spec.Image = &metal3.Image{
+	host.Spec.Image = &metal3shared.Image{
 		URL:      "https://example.com/image-name",
 		Checksum: "12345",
 	}
@@ -1049,7 +1049,7 @@ func TestDeleteHost(t *testing.T) {
 		func() *metal3.BareMetalHost {
 			host := newDefaultNamedHost("provisioned-host", t)
 			host.Status.HardwareDetails = &metal3.HardwareDetails{}
-			host.Status.Provisioning.Image = metal3.Image{
+			host.Status.Provisioning.Image = metal3shared.Image{
 				URL:      "image-url",
 				Checksum: "image-checksum",
 			}

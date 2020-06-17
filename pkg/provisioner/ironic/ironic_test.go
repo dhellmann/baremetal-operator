@@ -30,7 +30,7 @@ func TestGetUpdateOptsForNodeWithRootHints(t *testing.T) {
 			UID:       "27720611-e5d1-45d3-ba3a-222dcfaa4ca2",
 		},
 		Spec: metal3.BareMetalHostSpec{
-			Image: &metal3.Image{
+			Image: &metal3shared.Image{
 				URL: "not-empty",
 			},
 			Online:          true,
@@ -137,7 +137,7 @@ func TestGetUpdateOptsForNodeVirtual(t *testing.T) {
 			UID:       "27720611-e5d1-45d3-ba3a-222dcfaa4ca2",
 		},
 		Spec: metal3.BareMetalHostSpec{
-			Image: &metal3.Image{
+			Image: &metal3shared.Image{
 				URL:          "not-empty",
 				Checksum:     "checksum",
 				ChecksumType: metal3shared.MD5,
@@ -232,7 +232,7 @@ func TestGetUpdateOptsForNodeDell(t *testing.T) {
 			UID:       "27720611-e5d1-45d3-ba3a-222dcfaa4ca2",
 		},
 		Spec: metal3.BareMetalHostSpec{
-			Image: &metal3.Image{
+			Image: &metal3shared.Image{
 				URL:          "not-empty",
 				Checksum:     "checksum",
 				ChecksumType: metal3shared.MD5,

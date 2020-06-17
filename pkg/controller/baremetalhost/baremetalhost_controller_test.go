@@ -1087,7 +1087,7 @@ func TestUpdateRootDeviceHints(t *testing.T) {
 		Scenario string
 		Host     metal3.BareMetalHost
 		Dirty    bool
-		Expected *metal3.RootDeviceHints
+		Expected *metal3shared.RootDeviceHints
 	}{
 		{
 			Scenario: "override profile with explicit hints",
@@ -1099,7 +1099,7 @@ func TestUpdateRootDeviceHints(t *testing.T) {
 				},
 				Spec: metal3.BareMetalHostSpec{
 					HardwareProfile: "libvirt",
-					RootDeviceHints: &metal3.RootDeviceHints{
+					RootDeviceHints: &metal3shared.RootDeviceHints{
 						DeviceName:         "userd_devicename",
 						HCTL:               "1:2:3:4",
 						Model:              "userd_model",
@@ -1117,7 +1117,7 @@ func TestUpdateRootDeviceHints(t *testing.T) {
 				},
 			},
 			Dirty: true,
-			Expected: &metal3.RootDeviceHints{
+			Expected: &metal3shared.RootDeviceHints{
 				DeviceName:         "userd_devicename",
 				HCTL:               "1:2:3:4",
 				Model:              "userd_model",
@@ -1147,7 +1147,7 @@ func TestUpdateRootDeviceHints(t *testing.T) {
 				},
 			},
 			Dirty: true,
-			Expected: &metal3.RootDeviceHints{
+			Expected: &metal3shared.RootDeviceHints{
 				DeviceName: "/dev/vda",
 			},
 		},
@@ -1168,7 +1168,7 @@ func TestUpdateRootDeviceHints(t *testing.T) {
 				},
 			},
 			Dirty: true,
-			Expected: &metal3.RootDeviceHints{
+			Expected: &metal3shared.RootDeviceHints{
 				DeviceName: "/dev/sda",
 			},
 		},

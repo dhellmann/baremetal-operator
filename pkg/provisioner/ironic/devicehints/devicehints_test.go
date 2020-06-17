@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
+	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
 )
 
 func TestMakeHintMap(t *testing.T) {
@@ -14,12 +14,12 @@ func TestMakeHintMap(t *testing.T) {
 
 	for _, tc := range []struct {
 		Scenario string
-		Hints    metal3.RootDeviceHints
+		Hints    metal3shared.RootDeviceHints
 		Expected map[string]string
 	}{
 		{
 			Scenario: "device-name",
-			Hints: metal3.RootDeviceHints{
+			Hints: metal3shared.RootDeviceHints{
 				DeviceName: "userd_devicename",
 			},
 			Expected: map[string]string{
@@ -28,7 +28,7 @@ func TestMakeHintMap(t *testing.T) {
 		},
 		{
 			Scenario: "hctl",
-			Hints: metal3.RootDeviceHints{
+			Hints: metal3shared.RootDeviceHints{
 				HCTL: "1:2:3:4",
 			},
 			Expected: map[string]string{
@@ -37,7 +37,7 @@ func TestMakeHintMap(t *testing.T) {
 		},
 		{
 			Scenario: "model",
-			Hints: metal3.RootDeviceHints{
+			Hints: metal3shared.RootDeviceHints{
 				Model: "userd_model",
 			},
 			Expected: map[string]string{
@@ -46,7 +46,7 @@ func TestMakeHintMap(t *testing.T) {
 		},
 		{
 			Scenario: "vendor",
-			Hints: metal3.RootDeviceHints{
+			Hints: metal3shared.RootDeviceHints{
 				Vendor: "userd_vendor",
 			},
 			Expected: map[string]string{
@@ -55,7 +55,7 @@ func TestMakeHintMap(t *testing.T) {
 		},
 		{
 			Scenario: "serial-number",
-			Hints: metal3.RootDeviceHints{
+			Hints: metal3shared.RootDeviceHints{
 				SerialNumber: "userd_serial",
 			},
 			Expected: map[string]string{
@@ -64,7 +64,7 @@ func TestMakeHintMap(t *testing.T) {
 		},
 		{
 			Scenario: "min-size",
-			Hints: metal3.RootDeviceHints{
+			Hints: metal3shared.RootDeviceHints{
 				MinSizeGigabytes: 40,
 			},
 			Expected: map[string]string{
@@ -73,7 +73,7 @@ func TestMakeHintMap(t *testing.T) {
 		},
 		{
 			Scenario: "wwn",
-			Hints: metal3.RootDeviceHints{
+			Hints: metal3shared.RootDeviceHints{
 				WWN: "userd_wwn",
 			},
 			Expected: map[string]string{
@@ -82,7 +82,7 @@ func TestMakeHintMap(t *testing.T) {
 		},
 		{
 			Scenario: "wwn-with-extension",
-			Hints: metal3.RootDeviceHints{
+			Hints: metal3shared.RootDeviceHints{
 				WWNWithExtension: "userd_with_extension",
 			},
 			Expected: map[string]string{
@@ -91,7 +91,7 @@ func TestMakeHintMap(t *testing.T) {
 		},
 		{
 			Scenario: "wwn-extension",
-			Hints: metal3.RootDeviceHints{
+			Hints: metal3shared.RootDeviceHints{
 				WWNVendorExtension: "userd_vendor_extension",
 			},
 			Expected: map[string]string{
@@ -100,7 +100,7 @@ func TestMakeHintMap(t *testing.T) {
 		},
 		{
 			Scenario: "rotational-true",
-			Hints: metal3.RootDeviceHints{
+			Hints: metal3shared.RootDeviceHints{
 				Rotational: &addressableTrue,
 			},
 			Expected: map[string]string{
@@ -109,7 +109,7 @@ func TestMakeHintMap(t *testing.T) {
 		},
 		{
 			Scenario: "rotational-false",
-			Hints: metal3.RootDeviceHints{
+			Hints: metal3shared.RootDeviceHints{
 				Rotational: &addressableFalse,
 			},
 			Expected: map[string]string{
@@ -118,7 +118,7 @@ func TestMakeHintMap(t *testing.T) {
 		},
 		{
 			Scenario: "everything-bagel",
-			Hints: metal3.RootDeviceHints{
+			Hints: metal3shared.RootDeviceHints{
 				DeviceName:         "userd_devicename",
 				HCTL:               "1:2:3:4",
 				Model:              "userd_model",
@@ -145,7 +145,7 @@ func TestMakeHintMap(t *testing.T) {
 		},
 		{
 			Scenario: "empty",
-			Hints:    metal3.RootDeviceHints{},
+			Hints:    metal3shared.RootDeviceHints{},
 			Expected: map[string]string{},
 		},
 	} {

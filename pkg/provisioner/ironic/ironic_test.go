@@ -35,7 +35,7 @@ func TestGetUpdateOptsForNodeWithRootHints(t *testing.T) {
 			},
 			Online:          true,
 			HardwareProfile: "libvirt",
-			RootDeviceHints: &metal3.RootDeviceHints{
+			RootDeviceHints: &metal3shared.RootDeviceHints{
 				DeviceName:         "userd_devicename",
 				HCTL:               "1:2:3:4",
 				Model:              "userd_model",
@@ -53,7 +53,7 @@ func TestGetUpdateOptsForNodeWithRootHints(t *testing.T) {
 				ID: "provisioning-id",
 				// Place the hints in the status field to pretend the
 				// controller has already reconciled partially.
-				RootDeviceHints: &metal3.RootDeviceHints{
+				RootDeviceHints: &metal3shared.RootDeviceHints{
 					DeviceName:         "userd_devicename",
 					HCTL:               "1:2:3:4",
 					Model:              "userd_model",

@@ -3,7 +3,7 @@ package hardware
 import (
 	"fmt"
 
-	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
+	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
 )
 
 const (
@@ -19,7 +19,7 @@ type Profile struct {
 
 	// RootDeviceHints holds the suggestions for placing the storage
 	// for the root filesystem.
-	RootDeviceHints metal3.RootDeviceHints
+	RootDeviceHints metal3shared.RootDeviceHints
 
 	// RootGB is the size of the root volume in GB
 	RootGB int
@@ -36,7 +36,7 @@ var profiles = make(map[string]Profile)
 func init() {
 	profiles[DefaultProfileName] = Profile{
 		Name: DefaultProfileName,
-		RootDeviceHints: metal3.RootDeviceHints{
+		RootDeviceHints: metal3shared.RootDeviceHints{
 			DeviceName: "/dev/sda",
 		},
 		RootGB:  10,
@@ -46,7 +46,7 @@ func init() {
 
 	profiles["libvirt"] = Profile{
 		Name: "libvirt",
-		RootDeviceHints: metal3.RootDeviceHints{
+		RootDeviceHints: metal3shared.RootDeviceHints{
 			DeviceName: "/dev/vda",
 		},
 		RootGB:  10,
@@ -56,7 +56,7 @@ func init() {
 
 	profiles["dell"] = Profile{
 		Name: "dell",
-		RootDeviceHints: metal3.RootDeviceHints{
+		RootDeviceHints: metal3shared.RootDeviceHints{
 			HCTL: "0:0:0:0",
 		},
 		RootGB:  10,
@@ -66,7 +66,7 @@ func init() {
 
 	profiles["dell-raid"] = Profile{
 		Name: "dell-raid",
-		RootDeviceHints: metal3.RootDeviceHints{
+		RootDeviceHints: metal3shared.RootDeviceHints{
 			HCTL: "0:2:0:0",
 		},
 		RootGB:  10,
@@ -76,7 +76,7 @@ func init() {
 
 	profiles["openstack"] = Profile{
 		Name: "openstack",
-		RootDeviceHints: metal3.RootDeviceHints{
+		RootDeviceHints: metal3shared.RootDeviceHints{
 			DeviceName: "/dev/vdb",
 		},
 		RootGB:  10,

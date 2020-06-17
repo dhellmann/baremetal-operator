@@ -321,14 +321,14 @@ func logResult(info *reconcileInfo, result reconcile.Result) {
 	}
 }
 
-func recordActionFailure(info *reconcileInfo, errorType metal3.ErrorType, errorMessage string) actionFailed {
+func recordActionFailure(info *reconcileInfo, errorType metal3shared.ErrorType, errorMessage string) actionFailed {
 	dirty := info.host.SetErrorMessage(errorType, errorMessage)
 	if dirty {
-		eventType := map[metal3.ErrorType]string{
-			metal3.RegistrationError:    "RegistrationError",
-			metal3.InspectionError:      "InspectionError",
-			metal3.ProvisioningError:    "ProvisioningError",
-			metal3.PowerManagementError: "PowerManagementError",
+		eventType := map[metal3shared.ErrorType]string{
+			metal3shared.RegistrationError:    "RegistrationError",
+			metal3shared.InspectionError:      "InspectionError",
+			metal3shared.ProvisioningError:    "ProvisioningError",
+			metal3shared.PowerManagementError: "PowerManagementError",
 		}[errorType]
 
 		counter := actionFailureCounters.WithLabelValues(eventType)
@@ -348,7 +348,7 @@ func (r *ReconcileBareMetalHost) credentialsErrorResult(err error, request recon
 	// cause the host to be reconciled again so we do not Requeue.
 	case *EmptyBMCAddressError, *EmptyBMCSecretError:
 		credentialsInvalid.Inc()
-		dirty := host.SetOperationalStatus(metal3.OperationalStatusDiscovered)
+		dirty := host.SetOperationalStatus(metal3shared.OperationalStatusDiscovered)
 		if dirty {
 			// Set the host error message directly
 			// as we cannot use SetErrorCondition which
@@ -370,7 +370,7 @@ func (r *ReconcileBareMetalHost) credentialsErrorResult(err error, request recon
 	// at some point in the future.
 	case *ResolveBMCSecretRefError:
 		credentialsMissing.Inc()
-		changed, saveErr := r.setErrorCondition(request, host, metal3.RegistrationError, err.Error())
+		changed, saveErr := r.setErrorCondition(request, host, metal3shared.RegistrationError, err.Error())
 		if saveErr != nil {
 			return reconcile.Result{Requeue: true}, saveErr
 		}
@@ -387,7 +387,7 @@ func (r *ReconcileBareMetalHost) credentialsErrorResult(err error, request recon
 	// the host to be reconciled again
 	case *bmc.CredentialsValidationError, *bmc.UnknownBMCTypeError:
 		credentialsInvalid.Inc()
-		_, saveErr := r.setErrorCondition(request, host, metal3.RegistrationError, err.Error())
+		_, saveErr := r.setErrorCondition(request, host, metal3shared.RegistrationError, err.Error())
 		if saveErr != nil {
 			return reconcile.Result{Requeue: true}, saveErr
 		}
@@ -482,7 +482,7 @@ func (r *ReconcileBareMetalHost) actionRegistering(prov provisioner.Provisioner,
 	info.log.Info("response from validate", "provResult", provResult)
 
 	if provResult.ErrorMessage != "" {
-		return recordActionFailure(info, metal3.RegistrationError, provResult.ErrorMessage)
+		return recordActionFailure(info, metal3shared.RegistrationError, provResult.ErrorMessage)
 	}
 
 	if provResult.Dirty {
@@ -519,7 +519,7 @@ func (r *ReconcileBareMetalHost) actionInspecting(prov provisioner.Provisioner, 
 	}
 
 	if provResult.ErrorMessage != "" {
-		return recordActionFailure(info, metal3.InspectionError, provResult.ErrorMessage)
+		return recordActionFailure(info, metal3shared.InspectionError, provResult.ErrorMessage)
 	}
 
 	if details != nil {
@@ -602,7 +602,7 @@ func (r *ReconcileBareMetalHost) actionProvisioning(prov provisioner.Provisioner
 
 	if provResult.ErrorMessage != "" {
 		info.log.Info("handling provisioning error in controller")
-		return recordActionFailure(info, metal3.ProvisioningError, provResult.ErrorMessage)
+		return recordActionFailure(info, metal3shared.ProvisioningError, provResult.ErrorMessage)
 	}
 
 	if provResult.Dirty {
@@ -640,7 +640,7 @@ func (r *ReconcileBareMetalHost) actionDeprovisioning(prov provisioner.Provision
 	}
 
 	if provResult.ErrorMessage != "" {
-		return recordActionFailure(info, metal3.ProvisioningError, provResult.ErrorMessage)
+		return recordActionFailure(info, metal3shared.ProvisioningError, provResult.ErrorMessage)
 	}
 
 	if provResult.Dirty {
@@ -674,7 +674,7 @@ func (r *ReconcileBareMetalHost) manageHostPower(prov provisioner.Provisioner, i
 	}
 
 	if provResult.ErrorMessage != "" {
-		return recordActionFailure(info, metal3.PowerManagementError, provResult.ErrorMessage)
+		return recordActionFailure(info, metal3shared.PowerManagementError, provResult.ErrorMessage)
 	}
 
 	if provResult.Dirty {
@@ -697,7 +697,7 @@ func (r *ReconcileBareMetalHost) manageHostPower(prov provisioner.Provisioner, i
 	}
 
 	provState := info.host.Status.Provisioning.State
-	isProvisioned := provState == metal3.StateProvisioned || provState == metal3.StateExternallyProvisioned
+	isProvisioned := provState == metal3shared.StateProvisioned || provState == metal3shared.StateExternallyProvisioned
 	if hasRebootAnnotation(info.host) && isProvisioned {
 		desiredPowerOnState = false
 	}
@@ -725,7 +725,7 @@ func (r *ReconcileBareMetalHost) manageHostPower(prov provisioner.Provisioner, i
 	}
 
 	if provResult.ErrorMessage != "" {
-		return recordActionFailure(info, metal3.PowerManagementError, provResult.ErrorMessage)
+		return recordActionFailure(info, metal3shared.PowerManagementError, provResult.ErrorMessage)
 	}
 
 	if provResult.Dirty {
@@ -761,7 +761,7 @@ func (r *ReconcileBareMetalHost) actionManageSteadyState(prov provisioner.Provis
 		return actionError{err}
 	}
 	if provResult.ErrorMessage != "" {
-		return recordActionFailure(info, metal3.RegistrationError, provResult.ErrorMessage)
+		return recordActionFailure(info, metal3shared.RegistrationError, provResult.ErrorMessage)
 	}
 	if provResult.Dirty {
 		info.host.ClearError()
@@ -787,7 +787,7 @@ func (r *ReconcileBareMetalHost) actionManageReady(prov provisioner.Provisioner,
 		return actionError{err}
 	}
 	if provResult.ErrorMessage != "" {
-		return recordActionFailure(info, metal3.RegistrationError, provResult.ErrorMessage)
+		return recordActionFailure(info, metal3shared.RegistrationError, provResult.ErrorMessage)
 	}
 	if provResult.Dirty {
 		info.host.ClearError()
@@ -915,7 +915,7 @@ func (r *ReconcileBareMetalHost) getHostStatusFromAnnotation(host *metal3.BareMe
 	return objStatus, nil
 }
 
-func (r *ReconcileBareMetalHost) setErrorCondition(request reconcile.Request, host *metal3.BareMetalHost, errType metal3.ErrorType, message string) (changed bool, err error) {
+func (r *ReconcileBareMetalHost) setErrorCondition(request reconcile.Request, host *metal3.BareMetalHost, errType metal3shared.ErrorType, message string) (changed bool, err error) {
 	reqLogger := log.WithValues("Request.Namespace",
 		request.Namespace, "Request.Name", request.Name)
 

@@ -6,7 +6,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
+	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
 )
 
 const (
@@ -64,22 +64,22 @@ var hostConfigDataError = prometheus.NewCounterVec(prometheus.CounterOpts{
 
 var slowOperationBuckets = []float64{30, 90, 180, 360, 720, 1440}
 
-var stateTime = map[metal3.ProvisioningState]*prometheus.HistogramVec{
-	metal3.StateRegistering: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+var stateTime = map[metal3shared.ProvisioningState]*prometheus.HistogramVec{
+	metal3shared.StateRegistering: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name: "metal3_operation_register_duration_seconds",
 		Help: "Length of time per registration per host",
 	}, []string{labelHostNamespace, labelHostName}),
-	metal3.StateInspecting: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	metal3shared.StateInspecting: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "metal3_operation_inspect_duration_seconds",
 		Help:    "Length of time per hardware inspection per host",
 		Buckets: slowOperationBuckets,
 	}, []string{labelHostNamespace, labelHostName}),
-	metal3.StateProvisioning: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	metal3shared.StateProvisioning: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "metal3_operation_provision_duration_seconds",
 		Help:    "Length of time per hardware provision operation per host",
 		Buckets: slowOperationBuckets,
 	}, []string{labelHostNamespace, labelHostName}),
-	metal3.StateDeprovisioning: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	metal3shared.StateDeprovisioning: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "metal3_operation_deprovision_duration_seconds",
 		Help:    "Length of time per hardware deprovision operation per host",
 		Buckets: slowOperationBuckets,
@@ -133,7 +133,7 @@ func hostMetricLabels(request reconcile.Request) prometheus.Labels {
 	}
 }
 
-func stateChangeMetricLabels(prevState, newState metal3.ProvisioningState) prometheus.Labels {
+func stateChangeMetricLabels(prevState, newState metal3shared.ProvisioningState) prometheus.Labels {
 	return prometheus.Labels{
 		labelPrevState: string(prevState),
 		labelNewState:  string(newState),

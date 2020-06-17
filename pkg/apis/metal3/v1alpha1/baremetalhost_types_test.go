@@ -6,6 +6,8 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
 )
 
 func TestHostAvailable(t *testing.T) {
@@ -15,7 +17,7 @@ func TestHostAvailable(t *testing.T) {
 			Namespace: "myns",
 		},
 	}
-	hostWithError.SetErrorMessage(RegistrationError, "oops something went wrong")
+	hostWithError.SetErrorMessage(metal3shared.RegistrationError, "oops something went wrong")
 
 	testCases := []struct {
 		Host        BareMetalHost
@@ -546,7 +548,7 @@ func TestGetImageChecksum(t *testing.T) {
 				Spec: BareMetalHostSpec{
 					Image: &Image{
 						Checksum:     "md5hash",
-						ChecksumType: MD5,
+						ChecksumType: metal3shared.MD5,
 					},
 				},
 			},
@@ -577,7 +579,7 @@ func TestGetImageChecksum(t *testing.T) {
 				Spec: BareMetalHostSpec{
 					Image: &Image{
 						Checksum:     "sha256hash",
-						ChecksumType: SHA256,
+						ChecksumType: metal3shared.SHA256,
 					},
 				},
 			},
@@ -593,7 +595,7 @@ func TestGetImageChecksum(t *testing.T) {
 				Spec: BareMetalHostSpec{
 					Image: &Image{
 						Checksum:     "sha512hash",
-						ChecksumType: SHA512,
+						ChecksumType: metal3shared.SHA512,
 					},
 				},
 			},
@@ -608,7 +610,7 @@ func TestGetImageChecksum(t *testing.T) {
 				},
 				Spec: BareMetalHostSpec{
 					Image: &Image{
-						ChecksumType: SHA512,
+						ChecksumType: metal3shared.SHA512,
 					},
 				},
 			},

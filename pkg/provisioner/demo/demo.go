@@ -6,6 +6,7 @@ import (
 	"github.com/go-logr/logr"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
+	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
 	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 	"github.com/metal3-io/baremetal-operator/pkg/bmc"
 	"github.com/metal3-io/baremetal-operator/pkg/provisioner"
@@ -165,7 +166,7 @@ func (p *demoProvisioner) InspectHardware() (result provisioner.Result, details 
 				},
 			}
 		p.publisher("InspectionComplete", "Hardware inspection completed")
-		p.host.SetOperationalStatus(metal3.OperationalStatusOK)
+		p.host.SetOperationalStatus(metal3shared.OperationalStatusOK)
 	}
 
 	return

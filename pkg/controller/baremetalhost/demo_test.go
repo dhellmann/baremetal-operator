@@ -13,6 +13,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
 	metal3apis "github.com/metal3-io/baremetal-operator/pkg/apis"
+	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
 	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 	"github.com/metal3-io/baremetal-operator/pkg/provisioner/demo"
 )
@@ -69,7 +70,7 @@ func TestDemoRegistering(t *testing.T) {
 				host.Status.Provisioning.State,
 				host.Status.ErrorMessage,
 			)
-			return host.Status.Provisioning.State == metal3.StateRegistering
+			return host.Status.Provisioning.State == metal3shared.StateRegistering
 		},
 	)
 }
@@ -87,7 +88,7 @@ func TestDemoInspecting(t *testing.T) {
 				host.Status.Provisioning.State,
 				host.Status.ErrorMessage,
 			)
-			return host.Status.Provisioning.State == metal3.StateInspecting
+			return host.Status.Provisioning.State == metal3shared.StateInspecting
 		},
 	)
 }
@@ -105,7 +106,7 @@ func TestDemoReady(t *testing.T) {
 				host.Status.Provisioning.State,
 				host.Status.ErrorMessage,
 			)
-			return host.Status.Provisioning.State == metal3.StateReady
+			return host.Status.Provisioning.State == metal3shared.StateReady
 		},
 	)
 }
@@ -128,7 +129,7 @@ func TestDemoProvisioning(t *testing.T) {
 				host.Status.Provisioning.State,
 				host.Status.ErrorMessage,
 			)
-			return host.Status.Provisioning.State == metal3.StateProvisioning
+			return host.Status.Provisioning.State == metal3shared.StateProvisioning
 		},
 	)
 }
@@ -151,7 +152,7 @@ func TestDemoProvisioned(t *testing.T) {
 				host.Status.Provisioning.State,
 				host.Status.ErrorMessage,
 			)
-			return host.Status.Provisioning.State == metal3.StateProvisioned
+			return host.Status.Provisioning.State == metal3shared.StateProvisioned
 		},
 	)
 }

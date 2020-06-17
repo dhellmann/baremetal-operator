@@ -1,4 +1,4 @@
-package metal3
+package shared
 
 const (
 	// BareMetalHostFinalizer is the name of the finalizer added to

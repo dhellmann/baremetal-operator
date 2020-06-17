@@ -20,6 +20,7 @@ import (
 	"github.com/go-logr/logr"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
+	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
 	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 	"github.com/metal3-io/baremetal-operator/pkg/bmc"
 	"github.com/metal3-io/baremetal-operator/pkg/hardware"
@@ -320,7 +321,7 @@ func (p *ironicProvisioner) ValidateManagementAccess(credentialsChanged bool) (r
 			// parameters are given. We only want to do that for MD5,
 			// however, because those versions of ironic only support
 			// MD5 checksums.
-			if checksumType == string(metal3.MD5) {
+			if checksumType == string(metal3shared.MD5) {
 				updates = append(
 					updates,
 					nodes.UpdateOperation{
@@ -659,7 +660,7 @@ func (p *ironicProvisioner) getUpdateOptsForNode(ironicNode *nodes.Node) (update
 	// image, even if the other hash value parameters are given. We
 	// only want to do that for MD5, however, because those versions
 	// of ironic only support MD5 checksums.
-	if checksumType == string(metal3.MD5) {
+	if checksumType == string(metal3shared.MD5) {
 		if _, ok := ironicNode.InstanceInfo["image_checksum"]; !ok {
 			op = nodes.AddOp
 			p.log.Info("adding image_checksum")

@@ -1,7 +1,7 @@
 package baremetalhost
 
 import (
-	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
+	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
 
 	"time"
 
@@ -92,7 +92,7 @@ func (r actionError) Dirty() bool {
 // and that the resource should be marked as in error.
 type actionFailed struct {
 	dirty     bool
-	ErrorType metal3.ErrorType
+	ErrorType metal3shared.ErrorType
 }
 
 func (r actionFailed) Result() (result reconcile.Result, err error) {

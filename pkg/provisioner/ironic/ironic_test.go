@@ -11,6 +11,7 @@ import (
 
 	"github.com/gophercloud/gophercloud/openstack/baremetal/v1/nodes"
 
+	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
 	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 	"github.com/metal3-io/baremetal-operator/pkg/bmc"
 	"k8s.io/utils/pointer"
@@ -139,7 +140,7 @@ func TestGetUpdateOptsForNodeVirtual(t *testing.T) {
 			Image: &metal3.Image{
 				URL:          "not-empty",
 				Checksum:     "checksum",
-				ChecksumType: metal3.MD5,
+				ChecksumType: metal3shared.MD5,
 				DiskFormat:   pointer.StringPtr("raw"),
 			},
 			Online: true,
@@ -234,7 +235,7 @@ func TestGetUpdateOptsForNodeDell(t *testing.T) {
 			Image: &metal3.Image{
 				URL:          "not-empty",
 				Checksum:     "checksum",
-				ChecksumType: metal3.MD5,
+				ChecksumType: metal3shared.MD5,
 				//DiskFormat not given to verify it is not added in instance_info
 			},
 			Online: true,

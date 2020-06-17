@@ -6,6 +6,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have
@@ -55,102 +57,6 @@ type RootDeviceHints struct {
 	// True if the device should use spinning media, false otherwise.
 	Rotational *bool `json:"rotational,omitempty"`
 }
-
-// OperationalStatus represents the state of the host
-type OperationalStatus string
-
-const (
-	// OperationalStatusOK is the status value for when the host is
-	// configured correctly and is manageable.
-	OperationalStatusOK OperationalStatus = "OK"
-
-	// OperationalStatusDiscovered is the status value for when the
-	// host is only partially configured, such as when when the BMC
-	// address is known but the login credentials are not.
-	OperationalStatusDiscovered OperationalStatus = "discovered"
-
-	// OperationalStatusError is the status value for when the host
-	// has any sort of error.
-	OperationalStatusError OperationalStatus = "error"
-)
-
-// ErrorType indicates the class of problem that has caused the Host resource
-// to enter an error state.
-type ErrorType string
-
-const (
-	// RegistrationError is an error condition occurring when the
-	// controller is unable to connect to the Host's baseboard management
-	// controller.
-	RegistrationError ErrorType = "registration error"
-	// InspectionError is an error condition occurring when an attempt to
-	// obtain hardware details from the Host fails.
-	InspectionError ErrorType = "inspection error"
-	// ProvisioningError is an error condition occuring when the controller
-	// fails to provision or deprovision the Host.
-	ProvisioningError ErrorType = "provisioning error"
-	// PowerManagementError is an error condition occurring when the
-	// controller is unable to modify the power state of the Host.
-	PowerManagementError ErrorType = "power management error"
-)
-
-// ProvisioningState defines the states the provisioner will report
-// the host has having.
-type ProvisioningState string
-
-const (
-	// StateNone means the state is unknown
-	StateNone ProvisioningState = ""
-
-	// StateRegistrationError means there was an error registering the
-	// host with the backend
-	StateRegistrationError ProvisioningState = "registration error"
-
-	// StateRegistering means we are telling the backend about the host
-	StateRegistering ProvisioningState = "registering"
-
-	// StateMatchProfile means we are comparing the discovered details
-	// against known hardware profiles
-	StateMatchProfile ProvisioningState = "match profile"
-
-	// StateReady means the host can be consumed
-	StateReady ProvisioningState = "ready"
-
-	// StateAvailable means the host can be consumed
-	StateAvailable ProvisioningState = "available"
-
-	// StateProvisioning means we are writing an image to the host's
-	// disk(s)
-	StateProvisioning ProvisioningState = "provisioning"
-
-	// StateProvisioningError means we are writing an image to the
-	// host's disk(s)
-	StateProvisioningError ProvisioningState = "provisioning error"
-
-	// StateProvisioned means we have written an image to the host's
-	// disk(s)
-	StateProvisioned ProvisioningState = "provisioned"
-
-	// StateExternallyProvisioned means something else is managing the
-	// image on the host
-	StateExternallyProvisioned ProvisioningState = "externally provisioned"
-
-	// StateDeprovisioning means we are removing an image from the
-	// host's disk(s)
-	StateDeprovisioning ProvisioningState = "deprovisioning"
-
-	// StateInspecting means we are running the agent on the host to
-	// learn about the hardware components available there
-	StateInspecting ProvisioningState = "inspecting"
-
-	// StatePowerManagementError means something went wrong trying to
-	// power the server on or off.
-	StatePowerManagementError ProvisioningState = "power management error"
-
-	// StateDeleting means we are in the process of cleaning up the host
-	// ready for deletion
-	StateDeleting ProvisioningState = "deleting"
-)
 
 // BMCDetails contains the information necessary to communicate with
 // the bare metal controller module on host.
@@ -234,21 +140,6 @@ type BareMetalHostSpec struct {
 	ExternallyProvisioned bool `json:"externallyProvisioned,omitempty"`
 }
 
-// ChecksumType holds the algorithm name for the checksum
-// +kubebuilder:validation:Enum=md5;sha256;sha512
-type ChecksumType string
-
-const (
-	// MD5 checksum type
-	MD5 ChecksumType = "md5"
-
-	// SHA256 checksum type
-	SHA256 ChecksumType = "sha256"
-
-	// SHA512 checksum type
-	SHA512 ChecksumType = "sha512"
-)
-
 // Image holds the details of an image either to provisioned or that
 // has been provisioned.
 type Image struct {
@@ -260,7 +151,7 @@ type Image struct {
 
 	// ChecksumType is the checksum algorithm for the image.
 	// e.g md5, sha256, sha512
-	ChecksumType ChecksumType `json:"checksumType,omitempty"`
+	ChecksumType metal3shared.ChecksumType `json:"checksumType,omitempty"`
 
 	// DiskFormat contains the format of the image (raw, qcow2, ...)
 	// Needs to be set to raw for raw images streaming
@@ -472,13 +363,11 @@ type BareMetalHostStatus struct {
 	// after modifying this file
 
 	// OperationalStatus holds the status of the host
-	// +kubebuilder:validation:Enum="";OK;discovered;error
-	OperationalStatus OperationalStatus `json:"operationalStatus"`
+	OperationalStatus metal3shared.OperationalStatus `json:"operationalStatus"`
 
 	// ErrorType indicates the type of failure encountered when the
 	// OperationalStatus is OperationalStatusError
-	// +kubebuilder:validation:Enum=registration error;inspection error;provisioning error;power management error
-	ErrorType ErrorType `json:"errorType,omitempty"`
+	ErrorType metal3shared.ErrorType `json:"errorType,omitempty"`
 
 	// LastUpdated identifies when this status was last observed.
 	// +optional
@@ -513,7 +402,7 @@ type BareMetalHostStatus struct {
 // ProvisionStatus holds the state information for a single target.
 type ProvisionStatus struct {
 	// An indiciator for what the provisioner is doing with the host.
-	State ProvisioningState `json:"state"`
+	State metal3shared.ProvisioningState `json:"state"`
 
 	// The machine's UUID from the underlying provisioning tool
 	ID string `json:"ID"`
@@ -564,9 +453,9 @@ func (host *BareMetalHost) Available() bool {
 // SetErrorMessage updates the ErrorMessage in the host Status struct
 // when necessary and returns true when a change is made or false when
 // no change is made.
-func (host *BareMetalHost) SetErrorMessage(errType ErrorType, message string) (dirty bool) {
-	if host.Status.OperationalStatus != OperationalStatusError {
-		host.Status.OperationalStatus = OperationalStatusError
+func (host *BareMetalHost) SetErrorMessage(errType metal3shared.ErrorType, message string) (dirty bool) {
+	if host.Status.OperationalStatus != metal3shared.OperationalStatusError {
+		host.Status.OperationalStatus = metal3shared.OperationalStatusError
 		dirty = true
 	}
 	if host.Status.ErrorType != errType {
@@ -582,8 +471,8 @@ func (host *BareMetalHost) SetErrorMessage(errType ErrorType, message string) (d
 
 // ClearError removes any existing error message.
 func (host *BareMetalHost) ClearError() (dirty bool) {
-	dirty = host.SetOperationalStatus(OperationalStatusOK)
-	var emptyErrType ErrorType = ""
+	dirty = host.SetOperationalStatus(metal3shared.OperationalStatusOK)
+	var emptyErrType metal3shared.ErrorType = ""
 	if host.Status.ErrorType != emptyErrType {
 		host.Status.ErrorType = emptyErrType
 		dirty = true
@@ -639,7 +528,7 @@ func (host *BareMetalHost) SetHardwareProfile(name string) (dirty bool) {
 
 // SetOperationalStatus updates the OperationalStatus field and returns
 // true when a change is made or false when no change is made.
-func (host *BareMetalHost) SetOperationalStatus(status OperationalStatus) bool {
+func (host *BareMetalHost) SetOperationalStatus(status metal3shared.OperationalStatus) bool {
 	if host.Status.OperationalStatus != status {
 		host.Status.OperationalStatus = status
 		return true
@@ -649,7 +538,7 @@ func (host *BareMetalHost) SetOperationalStatus(status OperationalStatus) bool {
 
 // OperationalStatus returns the contents of the OperationalStatus
 // field.
-func (host *BareMetalHost) OperationalStatus() OperationalStatus {
+func (host *BareMetalHost) OperationalStatus() metal3shared.OperationalStatus {
 	return host.Status.OperationalStatus
 }
 
@@ -792,16 +681,16 @@ func (host *BareMetalHost) NewEvent(reason, message string) corev1.Event {
 
 // OperationMetricForState returns a pointer to the metric for the given
 // provisioning state.
-func (host *BareMetalHost) OperationMetricForState(operation ProvisioningState) (metric *OperationMetric) {
+func (host *BareMetalHost) OperationMetricForState(operation metal3shared.ProvisioningState) (metric *OperationMetric) {
 	history := &host.Status.OperationHistory
 	switch operation {
-	case StateRegistering:
+	case metal3shared.StateRegistering:
 		metric = &history.Register
-	case StateInspecting:
+	case metal3shared.StateInspecting:
 		metric = &history.Inspect
-	case StateProvisioning:
+	case metal3shared.StateProvisioning:
 		metric = &history.Provision
-	case StateDeprovisioning:
+	case metal3shared.StateDeprovisioning:
 		metric = &history.Deprovision
 	}
 	return
@@ -822,10 +711,10 @@ func (host *BareMetalHost) GetImageChecksum() (string, string, bool) {
 	}
 	if checksumType == "" {
 		// If only checksum is specified. Assume type is md5
-		return checksum, string(MD5), true
+		return checksum, string(metal3shared.MD5), true
 	}
 	switch checksumType {
-	case MD5, SHA256, SHA512:
+	case metal3shared.MD5, metal3shared.SHA256, metal3shared.SHA512:
 		return checksum, string(checksumType), true
 	default:
 		return "", "", false

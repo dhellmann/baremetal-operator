@@ -158,7 +158,7 @@ func tryReconcile(t *testing.T, r *ReconcileBareMetalHost, host *metal3.BareMeta
 	}
 }
 
-func waitForStatus(t *testing.T, r *ReconcileBareMetalHost, host *metal3.BareMetalHost, desiredStatus metal3.OperationalStatus) {
+func waitForStatus(t *testing.T, r *ReconcileBareMetalHost, host *metal3.BareMetalHost, desiredStatus metal3shared.OperationalStatus) {
 	logger := log.WithValues("host", host.ObjectMeta.Name, "desiredStatus", desiredStatus)
 	tryReconcile(t, r, host,
 		func(host *metal3.BareMetalHost, result reconcile.Result) bool {
@@ -189,7 +189,7 @@ func waitForNoError(t *testing.T, r *ReconcileBareMetalHost, host *metal3.BareMe
 	)
 }
 
-func waitForProvisioningState(t *testing.T, r *ReconcileBareMetalHost, host *metal3.BareMetalHost, desiredState metal3.ProvisioningState) {
+func waitForProvisioningState(t *testing.T, r *ReconcileBareMetalHost, host *metal3.BareMetalHost, desiredState metal3shared.ProvisioningState) {
 	tryReconcile(t, r, host,
 		func(host *metal3.BareMetalHost, result reconcile.Result) bool {
 			t.Logf("Waiting for state %q have state %q", desiredState, host.Status.Provisioning.State)
@@ -410,7 +410,7 @@ func TestRebootWithSuffixlessAnnotation(t *testing.T) {
 	host.Annotations = make(map[string]string)
 	host.Annotations[rebootAnnotationPrefix] = ""
 	host.Status.PoweredOn = true
-	host.Status.Provisioning.State = metal3.StateProvisioned
+	host.Status.Provisioning.State = metal3shared.StateProvisioned
 	host.Spec.Online = true
 	host.Spec.Image = &metal3.Image{URL: "foo", Checksum: "123"}
 	host.Spec.Image.URL = "foo"
@@ -469,7 +469,7 @@ func TestRebootWithSuffixedAnnotation(t *testing.T) {
 	annotation := rebootAnnotationPrefix + "/foo"
 	host.Annotations[annotation] = ""
 	host.Status.PoweredOn = true
-	host.Status.Provisioning.State = metal3.StateProvisioned
+	host.Status.Provisioning.State = metal3shared.StateProvisioned
 	host.Spec.Online = true
 	host.Spec.Image = &metal3.Image{URL: "foo", Checksum: "123"}
 	host.Spec.Image.URL = "foo"
@@ -639,7 +639,7 @@ func TestDiscoveredHost(t *testing.T) {
 			},
 		})
 	r := newTestReconciler(noAddress)
-	waitForStatus(t, r, noAddress, metal3.OperationalStatusDiscovered)
+	waitForStatus(t, r, noAddress, metal3shared.OperationalStatusDiscovered)
 
 	noAddressOrSecret := newHost("missing-bmc-address",
 		&metal3.BareMetalHostSpec{
@@ -649,7 +649,7 @@ func TestDiscoveredHost(t *testing.T) {
 			},
 		})
 	r = newTestReconciler(noAddressOrSecret)
-	waitForStatus(t, r, noAddressOrSecret, metal3.OperationalStatusDiscovered)
+	waitForStatus(t, r, noAddressOrSecret, metal3shared.OperationalStatusDiscovered)
 }
 
 // TestMissingBMCParameters ensures that a host that is missing some
@@ -936,7 +936,7 @@ func TestExternallyProvisionedTransitions(t *testing.T) {
 		host.Spec.ExternallyProvisioned = true
 		r := newTestReconciler(host)
 
-		waitForProvisioningState(t, r, host, metal3.StateExternallyProvisioned)
+		waitForProvisioningState(t, r, host, metal3shared.StateExternallyProvisioned)
 	})
 
 	t.Run("externally provisioned to inspecting", func(t *testing.T) {
@@ -945,7 +945,7 @@ func TestExternallyProvisionedTransitions(t *testing.T) {
 		host.Spec.ExternallyProvisioned = true
 		r := newTestReconciler(host)
 
-		waitForProvisioningState(t, r, host, metal3.StateExternallyProvisioned)
+		waitForProvisioningState(t, r, host, metal3shared.StateExternallyProvisioned)
 
 		host.Spec.ExternallyProvisioned = false
 		err := r.client.Update(goctx.TODO(), host)
@@ -954,7 +954,7 @@ func TestExternallyProvisionedTransitions(t *testing.T) {
 		}
 		t.Log("set externally provisioned to false")
 
-		waitForProvisioningState(t, r, host, metal3.StateInspecting)
+		waitForProvisioningState(t, r, host, metal3shared.StateInspecting)
 	})
 
 	t.Run("ready to externally provisioned", func(t *testing.T) {
@@ -962,7 +962,7 @@ func TestExternallyProvisionedTransitions(t *testing.T) {
 		host.Spec.Online = true
 		r := newTestReconciler(host)
 
-		waitForProvisioningState(t, r, host, metal3.StateReady)
+		waitForProvisioningState(t, r, host, metal3shared.StateReady)
 
 		host.Spec.ExternallyProvisioned = true
 		err := r.client.Update(goctx.TODO(), host)
@@ -971,7 +971,7 @@ func TestExternallyProvisionedTransitions(t *testing.T) {
 		}
 		t.Log("set externally provisioned to true")
 
-		waitForProvisioningState(t, r, host, metal3.StateExternallyProvisioned)
+		waitForProvisioningState(t, r, host, metal3shared.StateExternallyProvisioned)
 	})
 
 }

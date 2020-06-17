@@ -15,7 +15,7 @@ if [ "${IS_CONTAINER}" != "false" ]; then
   cd "${GOPATH}"/src/github.com/metal3-io/baremetal-operator
   export XDG_CACHE_HOME="/tmp/.cache"
 
-  INPUT_FILES="deploy/crds/*.yaml pkg/apis/metal3/v1alpha1/zz_generated.*.go"
+  INPUT_FILES="deploy/crds/*.yaml pkg/apis/metal3/zz_generated.*.go pkg/apis/metal3/v1alpha1/zz_generated.*.go pkg/apis/metal3/v1alpha2/zz_generated.*.go"
   cksum $INPUT_FILES > "$ARTIFACTS/lint.cksums.before"
   export VERBOSE="--verbose"
   make generate

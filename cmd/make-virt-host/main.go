@@ -63,7 +63,7 @@ data:
   password: {{ .B64Password }}
 
 ---
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: {{ .Domain }}

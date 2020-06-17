@@ -46,7 +46,7 @@ data:
   password: cGFzc3dvcmQ=
 
 ---
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: hostname
@@ -81,7 +81,7 @@ data:
   password: cGFzc3dvcmQ=
 
 ---
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: hostname
@@ -117,7 +117,7 @@ data:
   password: cGFzc3dvcmQ=
 
 ---
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: hostname

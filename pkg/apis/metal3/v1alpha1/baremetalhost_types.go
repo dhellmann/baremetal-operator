@@ -15,26 +15,6 @@ import (
 
 // NOTE(dhellmann): Update docs/api.md when changing these data structure.
 
-// BMCDetails contains the information necessary to communicate with
-// the bare metal controller module on host.
-type BMCDetails struct {
-
-	// Address holds the URL for accessing the controller on the
-	// network.
-	Address string `json:"address"`
-
-	// The name of the secret containing the BMC credentials (requires
-	// keys "username" and "password").
-	CredentialsName string `json:"credentialsName"`
-
-	// DisableCertificateVerification disables verification of server
-	// certificates when using HTTPS to connect to the BMC. This is
-	// required when the server certificate is self-signed, but is
-	// insecure because it allows a man-in-the-middle to intercept the
-	// connection.
-	DisableCertificateVerification bool `json:"disableCertificateVerification,omitempty"`
-}
-
 // BareMetalHostSpec defines the desired state of BareMetalHost
 type BareMetalHostSpec struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code
@@ -47,7 +27,7 @@ type BareMetalHostSpec struct {
 	Taints []corev1.Taint `json:"taints,omitempty"`
 
 	// How do we connect to the BMC?
-	BMC BMCDetails `json:"bmc,omitempty"`
+	BMC metal3shared.BMCDetails `json:"bmc,omitempty"`
 
 	// What is the name of the hardware profile for this host? It
 	// should only be necessary to set this when inspection cannot

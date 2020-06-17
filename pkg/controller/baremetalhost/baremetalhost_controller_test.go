@@ -82,7 +82,7 @@ func newHost(name string, spec *metal3.BareMetalHostSpec) *metal3.BareMetalHost 
 
 func newDefaultNamedHost(name string, t *testing.T) *metal3.BareMetalHost {
 	spec := &metal3.BareMetalHostSpec{
-		BMC: metal3.BMCDetails{
+		BMC: metal3shared.BMCDetails{
 			Address:         "ipmi://192.168.122.1:6233",
 			CredentialsName: defaultSecretName,
 		},
@@ -633,7 +633,7 @@ func TestUpdateGoodCredentialsOnBadSecret(t *testing.T) {
 func TestDiscoveredHost(t *testing.T) {
 	noAddress := newHost("missing-bmc-address",
 		&metal3.BareMetalHostSpec{
-			BMC: metal3.BMCDetails{
+			BMC: metal3shared.BMCDetails{
 				Address:         "",
 				CredentialsName: "bmc-creds-valid",
 			},
@@ -643,7 +643,7 @@ func TestDiscoveredHost(t *testing.T) {
 
 	noAddressOrSecret := newHost("missing-bmc-address",
 		&metal3.BareMetalHostSpec{
-			BMC: metal3.BMCDetails{
+			BMC: metal3shared.BMCDetails{
 				Address:         "",
 				CredentialsName: "",
 			},
@@ -666,7 +666,7 @@ func TestMissingBMCParameters(t *testing.T) {
 			Secret:   newBMCCredsSecret("bmc-creds-no-user", "", "Pass"),
 			Host: newHost("missing-bmc-username",
 				&metal3.BareMetalHostSpec{
-					BMC: metal3.BMCDetails{
+					BMC: metal3shared.BMCDetails{
 						Address:         "ipmi://192.168.122.1:6233",
 						CredentialsName: "bmc-creds-no-user",
 					},
@@ -678,7 +678,7 @@ func TestMissingBMCParameters(t *testing.T) {
 			Secret:   newBMCCredsSecret("bmc-creds-no-pass", "User", ""),
 			Host: newHost("missing-bmc-password",
 				&metal3.BareMetalHostSpec{
-					BMC: metal3.BMCDetails{
+					BMC: metal3shared.BMCDetails{
 						Address:         "ipmi://192.168.122.1:6233",
 						CredentialsName: "bmc-creds-no-pass",
 					},
@@ -690,7 +690,7 @@ func TestMissingBMCParameters(t *testing.T) {
 			Secret:   newBMCCredsSecret("bmc-creds-ok", "User", "Pass"),
 			Host: newHost("invalid-bmc-address",
 				&metal3.BareMetalHostSpec{
-					BMC: metal3.BMCDetails{
+					BMC: metal3shared.BMCDetails{
 						Address:         "unknown://notAvalidIPMIURL",
 						CredentialsName: "bmc-creds-ok",
 					},
@@ -702,7 +702,7 @@ func TestMissingBMCParameters(t *testing.T) {
 			Secret:   newBMCCredsSecret("bmc-creds-ok", "User", "Pass"),
 			Host: newHost("missing-bmc-address",
 				&metal3.BareMetalHostSpec{
-					BMC: metal3.BMCDetails{
+					BMC: metal3shared.BMCDetails{
 						Address:         "",
 						CredentialsName: "bmc-creds-ok",
 					},
@@ -714,7 +714,7 @@ func TestMissingBMCParameters(t *testing.T) {
 			Secret:   newBMCCredsSecret("bmc-creds-ok", "User", "Pass"),
 			Host: newHost("missing-bmc-credentials-ref",
 				&metal3.BareMetalHostSpec{
-					BMC: metal3.BMCDetails{
+					BMC: metal3shared.BMCDetails{
 						Address:         "ipmi://192.168.122.1:6233",
 						CredentialsName: "",
 					},
@@ -726,7 +726,7 @@ func TestMissingBMCParameters(t *testing.T) {
 			Secret:   newBMCCredsSecret("bmc-creds-ok", "User", "Pass"),
 			Host: newHost("non-existent-bmc-secret-ref",
 				&metal3.BareMetalHostSpec{
-					BMC: metal3.BMCDetails{
+					BMC: metal3shared.BMCDetails{
 						Address:         "ipmi://192.168.122.1:6233",
 						CredentialsName: "this-secret-does-not-exist",
 					},
@@ -749,7 +749,7 @@ func TestFixSecret(t *testing.T) {
 	secret := newBMCCredsSecret("bmc-creds-no-user", "", "Pass")
 	host := newHost("fix-secret",
 		&metal3.BareMetalHostSpec{
-			BMC: metal3.BMCDetails{
+			BMC: metal3shared.BMCDetails{
 				Address:         "ipmi://192.168.122.1:6233",
 				CredentialsName: "bmc-creds-no-user",
 			},
@@ -786,7 +786,7 @@ func TestBreakThenFixSecret(t *testing.T) {
 	secret := newBMCCredsSecret("bmc-creds-toggle-user", "User", "Pass")
 	host := newHost("break-then-fix-secret",
 		&metal3.BareMetalHostSpec{
-			BMC: metal3.BMCDetails{
+			BMC: metal3shared.BMCDetails{
 				Address:         "ipmi://192.168.122.1:6233",
 				CredentialsName: "bmc-creds-toggle-user",
 			},
@@ -1021,7 +1021,7 @@ func TestDeleteHost(t *testing.T) {
 		},
 		func() *metal3.BareMetalHost {
 			host := newDefaultNamedHost("without-bmc", t)
-			host.Spec.BMC = metal3.BMCDetails{}
+			host.Spec.BMC = metal3shared.BMCDetails{}
 			host.Finalizers = append(host.Finalizers,
 				metal3shared.BareMetalHostFinalizer)
 			return host
@@ -1030,7 +1030,7 @@ func TestDeleteHost(t *testing.T) {
 			t.Logf("host with bad credentials, no user")
 			host := newHost("fix-secret",
 				&metal3.BareMetalHostSpec{
-					BMC: metal3.BMCDetails{
+					BMC: metal3shared.BMCDetails{
 						Address:         "ipmi://192.168.122.1:6233",
 						CredentialsName: "bmc-creds-no-user",
 					},

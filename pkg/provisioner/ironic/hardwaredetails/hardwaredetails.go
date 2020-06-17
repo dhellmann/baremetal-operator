@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gophercloud/gophercloud/openstack/baremetalintrospection/v1/introspection"
+	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
 	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 )
 
@@ -22,25 +23,25 @@ func GetHardwareDetails(data *introspection.Data) *metal3.HardwareDetails {
 	return details
 }
 
-func getVLANs(intf introspection.BaseInterfaceType) (vlans []metal3.VLAN, vlanid metal3.VLANID) {
+func getVLANs(intf introspection.BaseInterfaceType) (vlans []metal3shared.VLAN, vlanid metal3shared.VLANID) {
 	if intf.LLDPProcessed == nil {
 		return
 	}
 	if spvs, ok := intf.LLDPProcessed["switch_port_vlans"]; ok {
 		if data, ok := spvs.([]map[string]interface{}); ok {
-			vlans = make([]metal3.VLAN, len(data))
+			vlans = make([]metal3shared.VLAN, len(data))
 			for i, vlan := range data {
 				vid, _ := vlan["id"].(int)
 				name, _ := vlan["name"].(string)
-				vlans[i] = metal3.VLAN{
-					ID:   metal3.VLANID(vid),
+				vlans[i] = metal3shared.VLAN{
+					ID:   metal3shared.VLANID(vid),
 					Name: name,
 				}
 			}
 		}
 	}
 	if vid, ok := intf.LLDPProcessed["switch_port_untagged_vlan_id"].(int); ok {
-		vlanid = metal3.VLANID(vid)
+		vlanid = metal3shared.VLANID(vid)
 	}
 	return
 }
@@ -56,8 +57,8 @@ func getNICSpeedGbps(intfExtradata introspection.ExtraHardwareData) (speedGbps i
 
 func getNICDetails(ifdata []introspection.InterfaceType,
 	basedata map[string]introspection.BaseInterfaceType,
-	extradata introspection.ExtraHardwareDataSection) []metal3.NIC {
-	nics := make([]metal3.NIC, len(ifdata))
+	extradata introspection.ExtraHardwareDataSection) []metal3shared.NIC {
+	nics := make([]metal3shared.NIC, len(ifdata))
 	for i, intf := range ifdata {
 		baseIntf := basedata[intf.Name]
 		vlans, vlanid := getVLANs(baseIntf)
@@ -65,7 +66,7 @@ func getNICDetails(ifdata []introspection.InterfaceType,
 		if ip == "" {
 			ip = intf.IPV6Address
 		}
-		nics[i] = metal3.NIC{
+		nics[i] = metal3shared.NIC{
 			Name: intf.Name,
 			Model: strings.TrimLeft(fmt.Sprintf("%s %s",
 				intf.Vendor, intf.Product), " "),
@@ -80,13 +81,13 @@ func getNICDetails(ifdata []introspection.InterfaceType,
 	return nics
 }
 
-func getStorageDetails(diskdata []introspection.RootDiskType) []metal3.Storage {
-	storage := make([]metal3.Storage, len(diskdata))
+func getStorageDetails(diskdata []introspection.RootDiskType) []metal3shared.Storage {
+	storage := make([]metal3shared.Storage, len(diskdata))
 	for i, disk := range diskdata {
-		storage[i] = metal3.Storage{
+		storage[i] = metal3shared.Storage{
 			Name:               disk.Name,
 			Rotational:         disk.Rotational,
-			SizeBytes:          metal3.Capacity(disk.Size),
+			SizeBytes:          metal3shared.Capacity(disk.Size),
 			Vendor:             disk.Vendor,
 			Model:              disk.Model,
 			SerialNumber:       disk.Serial,
@@ -99,8 +100,8 @@ func getStorageDetails(diskdata []introspection.RootDiskType) []metal3.Storage {
 	return storage
 }
 
-func getSystemVendorDetails(vendor introspection.SystemVendorType) metal3.HardwareSystemVendor {
-	return metal3.HardwareSystemVendor{
+func getSystemVendorDetails(vendor introspection.SystemVendorType) metal3shared.HardwareSystemVendor {
+	return metal3shared.HardwareSystemVendor{
 		Manufacturer: vendor.Manufacturer,
 		ProductName:  vendor.ProductName,
 		SerialNumber: vendor.SerialNumber,
@@ -122,10 +123,10 @@ func getCPUDetails(cpudata *introspection.CPUType) metal3.CPU {
 	return cpu
 }
 
-func getFirmwareDetails(firmwaredata introspection.ExtraHardwareDataSection) metal3.Firmware {
+func getFirmwareDetails(firmwaredata introspection.ExtraHardwareDataSection) metal3shared.Firmware {
 
 	// handle bios optionally
-	var bios metal3.BIOS
+	var bios metal3shared.BIOS
 
 	if biosdata, ok := firmwaredata["bios"]; ok {
 		// we do not know if all fields will be supplied
@@ -136,7 +137,7 @@ func getFirmwareDetails(firmwaredata introspection.ExtraHardwareDataSection) met
 		bios.Date, _ = biosdata["date"].(string)
 	}
 
-	return metal3.Firmware{
+	return metal3shared.Firmware{
 		BIOS: bios,
 	}
 

@@ -6,6 +6,7 @@ import (
 	"github.com/go-logr/logr"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
+	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
 	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 	"github.com/metal3-io/baremetal-operator/pkg/bmc"
 	"github.com/metal3-io/baremetal-operator/pkg/provisioner"
@@ -76,7 +77,7 @@ func (p *fixtureProvisioner) InspectHardware() (result provisioner.Result, detai
 		details =
 			&metal3.HardwareDetails{
 				RAMMebibytes: 128 * 1024,
-				NIC: []metal3.NIC{
+				NIC: []metal3shared.NIC{
 					{
 						Name:      "nic-1",
 						Model:     "virt-io",
@@ -94,17 +95,17 @@ func (p *fixtureProvisioner) InspectHardware() (result provisioner.Result, detai
 						PXE:       false,
 					},
 				},
-				Storage: []metal3.Storage{
+				Storage: []metal3shared.Storage{
 					{
 						Name:       "disk-1 (boot)",
 						Rotational: false,
-						SizeBytes:  metal3.TebiByte * 93,
+						SizeBytes:  metal3shared.TebiByte * 93,
 						Model:      "Dell CFJ61",
 					},
 					{
 						Name:       "disk-2",
 						Rotational: false,
-						SizeBytes:  metal3.TebiByte * 93,
+						SizeBytes:  metal3shared.TebiByte * 93,
 						Model:      "Dell CFJ61",
 					},
 				},

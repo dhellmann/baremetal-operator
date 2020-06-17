@@ -439,7 +439,7 @@ func TestHostNeedsDeprovisioning(t *testing.T) {
 func TestCredentialStatusMatch(t *testing.T) {
 	for _, tc := range []struct {
 		Scenario   string
-		CredStat   CredentialsStatus
+		CredStat   metal3shared.CredentialsStatus
 		SecretName string
 		Secret     corev1.Secret
 		Expected   bool
@@ -452,7 +452,7 @@ func TestCredentialStatusMatch(t *testing.T) {
 
 		{
 			Scenario: "new name",
-			CredStat: CredentialsStatus{
+			CredStat: metal3shared.CredentialsStatus{
 				Reference: &corev1.SecretReference{
 					Name:      "old name",
 					Namespace: "namespace",
@@ -469,7 +469,7 @@ func TestCredentialStatusMatch(t *testing.T) {
 
 		{
 			Scenario: "match",
-			CredStat: CredentialsStatus{
+			CredStat: metal3shared.CredentialsStatus{
 				Reference: &corev1.SecretReference{
 					Name:      "match",
 					Namespace: "namespace",
@@ -488,7 +488,7 @@ func TestCredentialStatusMatch(t *testing.T) {
 
 		{
 			Scenario: "wrong namespace",
-			CredStat: CredentialsStatus{
+			CredStat: metal3shared.CredentialsStatus{
 				Reference: &corev1.SecretReference{
 					Name:      "match",
 					Namespace: "namespace",
@@ -507,7 +507,7 @@ func TestCredentialStatusMatch(t *testing.T) {
 
 		{
 			Scenario: "new version",
-			CredStat: CredentialsStatus{
+			CredStat: metal3shared.CredentialsStatus{
 				Reference: &corev1.SecretReference{
 					Name:      "new version",
 					Namespace: "namespace",

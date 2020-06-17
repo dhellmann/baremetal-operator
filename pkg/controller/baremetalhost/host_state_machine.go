@@ -55,7 +55,7 @@ func (hsm *hostStateMachine) handlers() map[metal3shared.ProvisioningState]state
 func recordStateBegin(host *metal3.BareMetalHost, state metal3shared.ProvisioningState, time metav1.Time) {
 	if nextMetric := host.OperationMetricForState(state); nextMetric != nil {
 		if nextMetric.Start.IsZero() || !nextMetric.End.IsZero() {
-			*nextMetric = metal3.OperationMetric{
+			*nextMetric = metal3shared.OperationMetric{
 				Start: time,
 			}
 		}

@@ -88,7 +88,7 @@ network interface that will PXE boot.
 For example:
 
 ```yaml
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: worker-0
@@ -118,7 +118,7 @@ data:
   password: cGFzc3dvcmQ=
 
 ---
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: openshift-worker-1
@@ -154,7 +154,7 @@ data:
   password: cGFzc3dvcmQ=
 
 ---
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: openshift-master-1
@@ -188,7 +188,7 @@ data:
   password: cGFzc3dvcmQ=
 
 ---
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: worker-99

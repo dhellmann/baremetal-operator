@@ -10,7 +10,7 @@ data:
   username: YWRtaW4=
   password: MWYyZDFlMmU2N2Rm
 ---
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: demo-discovered
@@ -35,7 +35,7 @@ data:
   username: YWRtaW4=
   password: MWYyZDFlMmU2N2Rm
 ---
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: demo-externally-provisioned
@@ -58,7 +58,7 @@ data:
   username: YWRtaW4=
   password: MWYyZDFlMmU2N2Rm
 ---
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: demo-registration-error
@@ -80,7 +80,7 @@ data:
   username: YWRtaW4=
   password: MWYyZDFlMmU2N2Rm
 ---
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: demo-registering
@@ -102,7 +102,7 @@ data:
   username: YWRtaW4=
   password: MWYyZDFlMmU2N2Rm
 ---
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: demo-ready
@@ -124,7 +124,7 @@ data:
   username: YWRtaW4=
   password: MWYyZDFlMmU2N2Rm
 ---
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: demo-inspecting
@@ -146,7 +146,7 @@ data:
   username: YWRtaW4=
   password: MWYyZDFlMmU2N2Rm
 ---
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: demo-provisioning
@@ -175,7 +175,7 @@ data:
   username: YWRtaW4=
   password: MWYyZDFlMmU2N2Rm
 ---
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: demo-provisioned
@@ -204,7 +204,7 @@ data:
   username: YWRtaW4=
   password: MWYyZDFlMmU2N2Rm
 ---
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   name: demo-validation-error

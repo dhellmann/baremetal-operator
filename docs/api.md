@@ -101,20 +101,6 @@ mainly, but not only, provisioning details.
 
 * *description* -- A human-provided string to help identify the host.
 
-* *hardwareProfile* -- **This field is deprecated. See rootDeviceHints instead.**
-  The name of the hardware profile to use. The following are the current
-  supported `hardwareProfile` settings and their corresponding root devices.
-
-  | **hardwareProfile** | **Root Device** |
-  |---------------------|-----------------|
-  | `unknown`           | /dev/sda        |
-  | `libvirt`           | /dev/vda        |
-  | `dell`              | HCTL: 0:0:0:0   |
-  | `dell-raid`         | HCTL: 0:2:0:0   |
-  | `openstack`         | /dev/vdb        |
-
-  **NOTE:** These are subject to change.
-
 * *rootDeviceHints* -- Guidance for how to choose the device to
   receive the image being provisioned. The storage devices are
   examined in the order they are discovered during inspection and the
@@ -263,7 +249,7 @@ The following is a complete example from a running cluster of a *BareMetalHost*
 resource (in YAML), it includes its specification and status sections:
 
 ```yaml
-apiVersion: metal3.io/v1alpha1
+apiVersion: metal3.io/v1alpha2
 kind: BareMetalHost
 metadata:
   creationTimestamp: "2019-09-20T06:33:35Z"
@@ -273,7 +259,7 @@ metadata:
   name: bmo-master-0
   namespace: bmo-project
   resourceVersion: "22642"
-  selfLink: /apis/metal3.io/v1alpha1/namespaces/bmo-project/baremetalhosts/bmo-master-0
+  selfLink: /apis/metal3.io/v1alpha2/namespaces/bmo-project/baremetalhosts/bmo-master-0
   uid: 92b2f77a-db70-11e9-9db1-525400764849
 spec:
   bmc:

@@ -13,7 +13,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	metal3v1alpha1 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha1"
+	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 	"github.com/metal3-io/baremetal-operator/pkg/bmc"
 	"github.com/metal3-io/baremetal-operator/pkg/hardware"
 	"github.com/metal3-io/baremetal-operator/pkg/provisioner"
@@ -114,7 +114,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	// Watch for changes to primary resource BareMetalHost
-	err = c.Watch(&source.Kind{Type: &metal3v1alpha1.BareMetalHost{}},
+	err = c.Watch(&source.Kind{Type: &metal3.BareMetalHost{}},
 		&handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
@@ -124,7 +124,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	err = c.Watch(&source.Kind{Type: &corev1.Secret{}},
 		&handler.EnqueueRequestForOwner{
 			IsController: true,
-			OwnerType:    &metal3v1alpha1.BareMetalHost{},
+			OwnerType:    &metal3.BareMetalHost{},
 		})
 	return err
 }
@@ -144,7 +144,7 @@ type ReconcileBareMetalHost struct {
 // hold them in a context
 type reconcileInfo struct {
 	log               logr.Logger
-	host              *metal3v1alpha1.BareMetalHost
+	host              *metal3.BareMetalHost
 	request           reconcile.Request
 	bmcCredsSecret    *corev1.Secret
 	events            []corev1.Event
@@ -178,7 +178,7 @@ func (r *ReconcileBareMetalHost) Reconcile(request reconcile.Request) (result re
 	reqLogger.Info("Reconciling BareMetalHost")
 
 	// Fetch the BareMetalHost
-	host := &metal3v1alpha1.BareMetalHost{}
+	host := &metal3.BareMetalHost{}
 	err = r.client.Get(context.TODO(), request.NamespacedName, host)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
@@ -195,7 +195,7 @@ func (r *ReconcileBareMetalHost) Reconcile(request reconcile.Request) (result re
 	// If the reconciliation is paused, requeue
 	annotations := host.GetAnnotations()
 	if annotations != nil {
-		if _, ok := annotations[metal3v1alpha1.PausedAnnotation]; ok {
+		if _, ok := annotations[metal3.PausedAnnotation]; ok {
 			return reconcile.Result{Requeue: true, RequeueAfter: pauseRetryDelay}, nil
 		}
 	}
@@ -233,10 +233,10 @@ func (r *ReconcileBareMetalHost) Reconcile(request reconcile.Request) (result re
 		reqLogger.Info(
 			"adding finalizer",
 			"existingFinalizers", host.Finalizers,
-			"newValue", metal3v1alpha1.BareMetalHostFinalizer,
+			"newValue", metal3.BareMetalHostFinalizer,
 		)
 		host.Finalizers = append(host.Finalizers,
-			metal3v1alpha1.BareMetalHostFinalizer)
+			metal3.BareMetalHostFinalizer)
 		err := r.client.Update(context.TODO(), host)
 		if err != nil {
 			return reconcile.Result{}, errors.Wrap(err, "failed to add finalizer")
@@ -310,7 +310,7 @@ func (r *ReconcileBareMetalHost) Reconcile(request reconcile.Request) (result re
 func logResult(info *reconcileInfo, result reconcile.Result) {
 	if result.Requeue || result.RequeueAfter != 0 ||
 		!utils.StringInList(info.host.Finalizers,
-			metal3v1alpha1.BareMetalHostFinalizer) {
+			metal3.BareMetalHostFinalizer) {
 		info.log.Info("done",
 			"requeue", result.Requeue,
 			"after", result.RequeueAfter)
@@ -320,14 +320,14 @@ func logResult(info *reconcileInfo, result reconcile.Result) {
 	}
 }
 
-func recordActionFailure(info *reconcileInfo, errorType metal3v1alpha1.ErrorType, errorMessage string) actionFailed {
+func recordActionFailure(info *reconcileInfo, errorType metal3.ErrorType, errorMessage string) actionFailed {
 	dirty := info.host.SetErrorMessage(errorType, errorMessage)
 	if dirty {
-		eventType := map[metal3v1alpha1.ErrorType]string{
-			metal3v1alpha1.RegistrationError:    "RegistrationError",
-			metal3v1alpha1.InspectionError:      "InspectionError",
-			metal3v1alpha1.ProvisioningError:    "ProvisioningError",
-			metal3v1alpha1.PowerManagementError: "PowerManagementError",
+		eventType := map[metal3.ErrorType]string{
+			metal3.RegistrationError:    "RegistrationError",
+			metal3.InspectionError:      "InspectionError",
+			metal3.ProvisioningError:    "ProvisioningError",
+			metal3.PowerManagementError: "PowerManagementError",
 		}[errorType]
 
 		counter := actionFailureCounters.WithLabelValues(eventType)
@@ -338,7 +338,7 @@ func recordActionFailure(info *reconcileInfo, errorType metal3v1alpha1.ErrorType
 	return actionFailed{dirty: dirty, ErrorType: errorType}
 }
 
-func (r *ReconcileBareMetalHost) credentialsErrorResult(err error, request reconcile.Request, host *metal3v1alpha1.BareMetalHost) (reconcile.Result, error) {
+func (r *ReconcileBareMetalHost) credentialsErrorResult(err error, request reconcile.Request, host *metal3.BareMetalHost) (reconcile.Result, error) {
 	switch err.(type) {
 	// We treat an empty bmc address and empty bmc credentials fields as a
 	// trigger the host needs to be put into a discovered status. We also set
@@ -347,7 +347,7 @@ func (r *ReconcileBareMetalHost) credentialsErrorResult(err error, request recon
 	// cause the host to be reconciled again so we do not Requeue.
 	case *EmptyBMCAddressError, *EmptyBMCSecretError:
 		credentialsInvalid.Inc()
-		dirty := host.SetOperationalStatus(metal3v1alpha1.OperationalStatusDiscovered)
+		dirty := host.SetOperationalStatus(metal3.OperationalStatusDiscovered)
 		if dirty {
 			// Set the host error message directly
 			// as we cannot use SetErrorCondition which
@@ -369,7 +369,7 @@ func (r *ReconcileBareMetalHost) credentialsErrorResult(err error, request recon
 	// at some point in the future.
 	case *ResolveBMCSecretRefError:
 		credentialsMissing.Inc()
-		changed, saveErr := r.setErrorCondition(request, host, metal3v1alpha1.RegistrationError, err.Error())
+		changed, saveErr := r.setErrorCondition(request, host, metal3.RegistrationError, err.Error())
 		if saveErr != nil {
 			return reconcile.Result{Requeue: true}, saveErr
 		}
@@ -386,7 +386,7 @@ func (r *ReconcileBareMetalHost) credentialsErrorResult(err error, request recon
 	// the host to be reconciled again
 	case *bmc.CredentialsValidationError, *bmc.UnknownBMCTypeError:
 		credentialsInvalid.Inc()
-		_, saveErr := r.setErrorCondition(request, host, metal3v1alpha1.RegistrationError, err.Error())
+		_, saveErr := r.setErrorCondition(request, host, metal3.RegistrationError, err.Error())
 		if saveErr != nil {
 			return reconcile.Result{Requeue: true}, saveErr
 		}
@@ -401,7 +401,7 @@ func (r *ReconcileBareMetalHost) credentialsErrorResult(err error, request recon
 }
 
 // hasRebootAnnotation checks for existence of reboot annotations and returns true if at least one exist
-func hasRebootAnnotation(host *metal3v1alpha1.BareMetalHost) bool {
+func hasRebootAnnotation(host *metal3.BareMetalHost) bool {
 	for annotation := range host.Annotations {
 		if isRebootAnnotation(annotation) {
 			return true
@@ -416,7 +416,7 @@ func isRebootAnnotation(annotation string) bool {
 }
 
 // clearRebootAnnotations deletes all reboot annotations exist on the provided host
-func clearRebootAnnotations(host *metal3v1alpha1.BareMetalHost) (dirty bool) {
+func clearRebootAnnotations(host *metal3.BareMetalHost) (dirty bool) {
 	for annotation := range host.Annotations {
 		if isRebootAnnotation(annotation) {
 			delete(host.Annotations, annotation)
@@ -435,7 +435,7 @@ func (r *ReconcileBareMetalHost) actionDeleting(prov provisioner.Provisioner, in
 	)
 
 	// no-op if finalizer has been removed.
-	if !utils.StringInList(info.host.Finalizers, metal3v1alpha1.BareMetalHostFinalizer) {
+	if !utils.StringInList(info.host.Finalizers, metal3.BareMetalHostFinalizer) {
 		info.log.Info("ready to be deleted")
 		return deleteComplete{}
 	}
@@ -450,7 +450,7 @@ func (r *ReconcileBareMetalHost) actionDeleting(prov provisioner.Provisioner, in
 
 	// Remove finalizer to allow deletion
 	info.host.Finalizers = utils.FilterStringFromList(
-		info.host.Finalizers, metal3v1alpha1.BareMetalHostFinalizer)
+		info.host.Finalizers, metal3.BareMetalHostFinalizer)
 	info.log.Info("cleanup is complete, removed finalizer",
 		"remaining", info.host.Finalizers)
 	if err := r.client.Update(context.Background(), info.host); err != nil {
@@ -481,7 +481,7 @@ func (r *ReconcileBareMetalHost) actionRegistering(prov provisioner.Provisioner,
 	info.log.Info("response from validate", "provResult", provResult)
 
 	if provResult.ErrorMessage != "" {
-		return recordActionFailure(info, metal3v1alpha1.RegistrationError, provResult.ErrorMessage)
+		return recordActionFailure(info, metal3.RegistrationError, provResult.ErrorMessage)
 	}
 
 	if provResult.Dirty {
@@ -518,7 +518,7 @@ func (r *ReconcileBareMetalHost) actionInspecting(prov provisioner.Provisioner, 
 	}
 
 	if provResult.ErrorMessage != "" {
-		return recordActionFailure(info, metal3v1alpha1.InspectionError, provResult.ErrorMessage)
+		return recordActionFailure(info, metal3.InspectionError, provResult.ErrorMessage)
 	}
 
 	if details != nil {
@@ -601,7 +601,7 @@ func (r *ReconcileBareMetalHost) actionProvisioning(prov provisioner.Provisioner
 
 	if provResult.ErrorMessage != "" {
 		info.log.Info("handling provisioning error in controller")
-		return recordActionFailure(info, metal3v1alpha1.ProvisioningError, provResult.ErrorMessage)
+		return recordActionFailure(info, metal3.ProvisioningError, provResult.ErrorMessage)
 	}
 
 	if provResult.Dirty {
@@ -626,7 +626,7 @@ func (r *ReconcileBareMetalHost) actionProvisioning(prov provisioner.Provisioner
 // clearHostProvisioningSettings removes the values related to
 // provisioning that do not trigger re-provisioning from the status
 // fields of a host.
-func clearHostProvisioningSettings(host *metal3v1alpha1.BareMetalHost) {
+func clearHostProvisioningSettings(host *metal3.BareMetalHost) {
 	host.Status.Provisioning.RootDeviceHints = nil
 }
 
@@ -639,7 +639,7 @@ func (r *ReconcileBareMetalHost) actionDeprovisioning(prov provisioner.Provision
 	}
 
 	if provResult.ErrorMessage != "" {
-		return recordActionFailure(info, metal3v1alpha1.ProvisioningError, provResult.ErrorMessage)
+		return recordActionFailure(info, metal3.ProvisioningError, provResult.ErrorMessage)
 	}
 
 	if provResult.Dirty {
@@ -656,7 +656,7 @@ func (r *ReconcileBareMetalHost) actionDeprovisioning(prov provisioner.Provision
 
 	// After the provisioner is done, clear the provisioning settings
 	// so we transition to the next state.
-	info.host.Status.Provisioning.Image = metal3v1alpha1.Image{}
+	info.host.Status.Provisioning.Image = metal3.Image{}
 	clearHostProvisioningSettings(info.host)
 
 	return actionComplete{}
@@ -673,7 +673,7 @@ func (r *ReconcileBareMetalHost) manageHostPower(prov provisioner.Provisioner, i
 	}
 
 	if provResult.ErrorMessage != "" {
-		return recordActionFailure(info, metal3v1alpha1.PowerManagementError, provResult.ErrorMessage)
+		return recordActionFailure(info, metal3.PowerManagementError, provResult.ErrorMessage)
 	}
 
 	if provResult.Dirty {
@@ -696,7 +696,7 @@ func (r *ReconcileBareMetalHost) manageHostPower(prov provisioner.Provisioner, i
 	}
 
 	provState := info.host.Status.Provisioning.State
-	isProvisioned := provState == metal3v1alpha1.StateProvisioned || provState == metal3v1alpha1.StateExternallyProvisioned
+	isProvisioned := provState == metal3.StateProvisioned || provState == metal3.StateExternallyProvisioned
 	if hasRebootAnnotation(info.host) && isProvisioned {
 		desiredPowerOnState = false
 	}
@@ -724,7 +724,7 @@ func (r *ReconcileBareMetalHost) manageHostPower(prov provisioner.Provisioner, i
 	}
 
 	if provResult.ErrorMessage != "" {
-		return recordActionFailure(info, metal3v1alpha1.PowerManagementError, provResult.ErrorMessage)
+		return recordActionFailure(info, metal3.PowerManagementError, provResult.ErrorMessage)
 	}
 
 	if provResult.Dirty {
@@ -760,7 +760,7 @@ func (r *ReconcileBareMetalHost) actionManageSteadyState(prov provisioner.Provis
 		return actionError{err}
 	}
 	if provResult.ErrorMessage != "" {
-		return recordActionFailure(info, metal3v1alpha1.RegistrationError, provResult.ErrorMessage)
+		return recordActionFailure(info, metal3.RegistrationError, provResult.ErrorMessage)
 	}
 	if provResult.Dirty {
 		info.host.ClearError()
@@ -786,7 +786,7 @@ func (r *ReconcileBareMetalHost) actionManageReady(prov provisioner.Provisioner,
 		return actionError{err}
 	}
 	if provResult.ErrorMessage != "" {
-		return recordActionFailure(info, metal3v1alpha1.RegistrationError, provResult.ErrorMessage)
+		return recordActionFailure(info, metal3.RegistrationError, provResult.ErrorMessage)
 	}
 	if provResult.Dirty {
 		info.host.ClearError()
@@ -811,7 +811,7 @@ func (r *ReconcileBareMetalHost) actionManageReady(prov provisioner.Provisioner,
 // saveHostProvisioningSettings copies the values related to
 // provisioning that do not trigger re-provisioning into the status
 // fields of the host.
-func saveHostProvisioningSettings(host *metal3v1alpha1.BareMetalHost) (dirty bool, err error) {
+func saveHostProvisioningSettings(host *metal3.BareMetalHost) (dirty bool, err error) {
 
 	// Ensure the root device hints we're going to use are stored.
 	//
@@ -832,7 +832,7 @@ func saveHostProvisioningSettings(host *metal3v1alpha1.BareMetalHost) (dirty boo
 	return
 }
 
-func (r *ReconcileBareMetalHost) saveHostStatus(host *metal3v1alpha1.BareMetalHost) error {
+func (r *ReconcileBareMetalHost) saveHostStatus(host *metal3.BareMetalHost) error {
 	t := metav1.Now()
 	host.Status.LastUpdated = &t
 
@@ -857,7 +857,7 @@ func (r *ReconcileBareMetalHost) saveHostStatus(host *metal3v1alpha1.BareMetalHo
 	return err
 }
 
-func (r *ReconcileBareMetalHost) saveHostAnnotation(host *metal3v1alpha1.BareMetalHost) error {
+func (r *ReconcileBareMetalHost) saveHostAnnotation(host *metal3.BareMetalHost) error {
 	//Repopulate annotation again
 	objStatus, err := r.getHostStatusFromAnnotation(host)
 	if err != nil {
@@ -872,7 +872,7 @@ func (r *ReconcileBareMetalHost) saveHostAnnotation(host *metal3v1alpha1.BareMet
 		}
 	}
 
-	delete(host.Annotations, metal3v1alpha1.StatusAnnotation)
+	delete(host.Annotations, metal3.StatusAnnotation)
 	newAnnotation, err := marshalStatusAnnotation(&host.Status)
 	if err != nil {
 		return err
@@ -880,11 +880,11 @@ func (r *ReconcileBareMetalHost) saveHostAnnotation(host *metal3v1alpha1.BareMet
 	if host.Annotations == nil {
 		host.Annotations = make(map[string]string)
 	}
-	host.Annotations[metal3v1alpha1.StatusAnnotation] = string(newAnnotation)
+	host.Annotations[metal3.StatusAnnotation] = string(newAnnotation)
 	return r.client.Update(context.TODO(), host.DeepCopy())
 }
 
-func marshalStatusAnnotation(status *metal3v1alpha1.BareMetalHostStatus) ([]byte, error) {
+func marshalStatusAnnotation(status *metal3.BareMetalHostStatus) ([]byte, error) {
 	newAnnotation, err := json.Marshal(status)
 	if err != nil {
 		return []byte{}, errors.Wrap(err, "failed to marshall status annotation")
@@ -892,8 +892,8 @@ func marshalStatusAnnotation(status *metal3v1alpha1.BareMetalHostStatus) ([]byte
 	return newAnnotation, nil
 }
 
-func unmarshalStatusAnnotation(content []byte) (*metal3v1alpha1.BareMetalHostStatus, error) {
-	objStatus := &metal3v1alpha1.BareMetalHostStatus{}
+func unmarshalStatusAnnotation(content []byte) (*metal3.BareMetalHostStatus, error) {
+	objStatus := &metal3.BareMetalHostStatus{}
 	if err := json.Unmarshal(content, objStatus); err != nil {
 		return nil, errors.Wrap(err, "Failed to fetch Status from annotation")
 	}
@@ -901,10 +901,10 @@ func unmarshalStatusAnnotation(content []byte) (*metal3v1alpha1.BareMetalHostSta
 }
 
 // extract host from Status annotation
-func (r *ReconcileBareMetalHost) getHostStatusFromAnnotation(host *metal3v1alpha1.BareMetalHost) (*metal3v1alpha1.BareMetalHostStatus, error) {
+func (r *ReconcileBareMetalHost) getHostStatusFromAnnotation(host *metal3.BareMetalHost) (*metal3.BareMetalHostStatus, error) {
 	annotations := host.GetAnnotations()
-	content := []byte(annotations[metal3v1alpha1.StatusAnnotation])
-	if annotations[metal3v1alpha1.StatusAnnotation] == "" {
+	content := []byte(annotations[metal3.StatusAnnotation])
+	if annotations[metal3.StatusAnnotation] == "" {
 		return nil, nil
 	}
 	objStatus, err := unmarshalStatusAnnotation(content)
@@ -914,7 +914,7 @@ func (r *ReconcileBareMetalHost) getHostStatusFromAnnotation(host *metal3v1alpha
 	return objStatus, nil
 }
 
-func (r *ReconcileBareMetalHost) setErrorCondition(request reconcile.Request, host *metal3v1alpha1.BareMetalHost, errType metal3v1alpha1.ErrorType, message string) (changed bool, err error) {
+func (r *ReconcileBareMetalHost) setErrorCondition(request reconcile.Request, host *metal3.BareMetalHost, errType metal3.ErrorType, message string) (changed bool, err error) {
 	reqLogger := log.WithValues("Request.Namespace",
 		request.Namespace, "Request.Name", request.Name)
 
@@ -934,7 +934,7 @@ func (r *ReconcileBareMetalHost) setErrorCondition(request reconcile.Request, ho
 }
 
 // Retrieve the secret containing the credentials for talking to the BMC.
-func (r *ReconcileBareMetalHost) getBMCSecretAndSetOwner(request reconcile.Request, host *metal3v1alpha1.BareMetalHost) (bmcCredsSecret *corev1.Secret, err error) {
+func (r *ReconcileBareMetalHost) getBMCSecretAndSetOwner(request reconcile.Request, host *metal3.BareMetalHost) (bmcCredsSecret *corev1.Secret, err error) {
 
 	if host.Spec.BMC.CredentialsName == "" {
 		return nil, &EmptyBMCSecretError{message: "The BMC secret reference is empty"}
@@ -964,7 +964,7 @@ func (r *ReconcileBareMetalHost) getBMCSecretAndSetOwner(request reconcile.Reque
 // Make sure the credentials for the management controller look
 // right and manufacture bmc.Credentials.  This does not actually try
 // to use the credentials.
-func (r *ReconcileBareMetalHost) buildAndValidateBMCCredentials(request reconcile.Request, host *metal3v1alpha1.BareMetalHost) (bmcCreds *bmc.Credentials, bmcCredsSecret *corev1.Secret, err error) {
+func (r *ReconcileBareMetalHost) buildAndValidateBMCCredentials(request reconcile.Request, host *metal3.BareMetalHost) (bmcCreds *bmc.Credentials, bmcCredsSecret *corev1.Secret, err error) {
 
 	// Retrieve the BMC secret from Kubernetes for this host
 	bmcCredsSecret, err = r.getBMCSecretAndSetOwner(request, host)
@@ -1001,7 +1001,7 @@ func (r *ReconcileBareMetalHost) buildAndValidateBMCCredentials(request reconcil
 	return bmcCreds, bmcCredsSecret, nil
 }
 
-func (r *ReconcileBareMetalHost) setBMCCredentialsSecretOwner(request reconcile.Request, host *metal3v1alpha1.BareMetalHost, secret *corev1.Secret) (err error) {
+func (r *ReconcileBareMetalHost) setBMCCredentialsSecretOwner(request reconcile.Request, host *metal3.BareMetalHost, secret *corev1.Secret) (err error) {
 	reqLogger := log.WithValues("Request.Namespace",
 		request.Namespace, "Request.Name", request.Name)
 	if metav1.IsControlledBy(secret, host) {
@@ -1031,10 +1031,10 @@ func (r *ReconcileBareMetalHost) publishEvent(request reconcile.Request, event c
 	return
 }
 
-func (r *ReconcileBareMetalHost) hostHasStatus(host *metal3v1alpha1.BareMetalHost) bool {
+func (r *ReconcileBareMetalHost) hostHasStatus(host *metal3.BareMetalHost) bool {
 	return !host.Status.LastUpdated.IsZero()
 }
 
-func hostHasFinalizer(host *metal3v1alpha1.BareMetalHost) bool {
-	return utils.StringInList(host.Finalizers, metal3v1alpha1.BareMetalHostFinalizer)
+func hostHasFinalizer(host *metal3.BareMetalHost) bool {
+	return utils.StringInList(host.Finalizers, metal3.BareMetalHostFinalizer)
 }

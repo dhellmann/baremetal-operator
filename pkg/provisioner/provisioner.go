@@ -3,7 +3,7 @@ package provisioner
 import (
 	"time"
 
-	metal3v1alpha1 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha1"
+	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 	"github.com/metal3-io/baremetal-operator/pkg/bmc"
 )
 
@@ -16,7 +16,7 @@ Package provisioning defines the API for talking to the provisioning backend.
 type EventPublisher func(reason, message string)
 
 // Factory is the interface for creating new Provisioner objects.
-type Factory func(host *metal3v1alpha1.BareMetalHost, bmcCreds bmc.Credentials, publish EventPublisher) (Provisioner, error)
+type Factory func(host *metal3.BareMetalHost, bmcCreds bmc.Credentials, publish EventPublisher) (Provisioner, error)
 
 // HostConfigData retrieves host configuration data
 type HostConfigData interface {
@@ -48,7 +48,7 @@ type Provisioner interface {
 	// details of devices discovered on the hardware. It may be called
 	// multiple times, and should return true for its dirty flag until the
 	// inspection is completed.
-	InspectHardware() (result Result, details *metal3v1alpha1.HardwareDetails, err error)
+	InspectHardware() (result Result, details *metal3.HardwareDetails, err error)
 
 	// UpdateHardwareState fetches the latest hardware state of the
 	// server and updates the HardwareDetails field of the host with

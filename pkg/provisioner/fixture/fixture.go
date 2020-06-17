@@ -6,7 +6,7 @@ import (
 	"github.com/go-logr/logr"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
-	metal3v1alpha1 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha1"
+	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 	"github.com/metal3-io/baremetal-operator/pkg/bmc"
 	"github.com/metal3-io/baremetal-operator/pkg/provisioner"
 )
@@ -19,7 +19,7 @@ var provisionRequeueDelay = time.Second * 10
 // and uses Ironic to manage the host.
 type fixtureProvisioner struct {
 	// the host to be managed by this provisioner
-	host *metal3v1alpha1.BareMetalHost
+	host *metal3.BareMetalHost
 	// the bmc credentials
 	bmcCreds bmc.Credentials
 	// a logger configured for this host
@@ -31,7 +31,7 @@ type fixtureProvisioner struct {
 }
 
 // New returns a new Ironic Provisioner
-func New(host *metal3v1alpha1.BareMetalHost, bmcCreds bmc.Credentials, publisher provisioner.EventPublisher) (provisioner.Provisioner, error) {
+func New(host *metal3.BareMetalHost, bmcCreds bmc.Credentials, publisher provisioner.EventPublisher) (provisioner.Provisioner, error) {
 	p := &fixtureProvisioner{
 		host:      host,
 		bmcCreds:  bmcCreds,
@@ -64,7 +64,7 @@ func (p *fixtureProvisioner) ValidateManagementAccess(credentialsChanged bool) (
 // details of devices discovered on the hardware. It may be called
 // multiple times, and should return true for its dirty flag until the
 // inspection is completed.
-func (p *fixtureProvisioner) InspectHardware() (result provisioner.Result, details *metal3v1alpha1.HardwareDetails, err error) {
+func (p *fixtureProvisioner) InspectHardware() (result provisioner.Result, details *metal3.HardwareDetails, err error) {
 	p.log.Info("inspecting hardware", "status", p.host.OperationalStatus())
 
 	// The inspection is ongoing. We'll need to check the fixture
@@ -74,9 +74,9 @@ func (p *fixtureProvisioner) InspectHardware() (result provisioner.Result, detai
 	if p.host.Status.HardwareDetails == nil {
 		p.log.Info("continuing inspection by setting details")
 		details =
-			&metal3v1alpha1.HardwareDetails{
+			&metal3.HardwareDetails{
 				RAMMebibytes: 128 * 1024,
-				NIC: []metal3v1alpha1.NIC{
+				NIC: []metal3.NIC{
 					{
 						Name:      "nic-1",
 						Model:     "virt-io",
@@ -94,24 +94,24 @@ func (p *fixtureProvisioner) InspectHardware() (result provisioner.Result, detai
 						PXE:       false,
 					},
 				},
-				Storage: []metal3v1alpha1.Storage{
+				Storage: []metal3.Storage{
 					{
 						Name:       "disk-1 (boot)",
 						Rotational: false,
-						SizeBytes:  metal3v1alpha1.TebiByte * 93,
+						SizeBytes:  metal3.TebiByte * 93,
 						Model:      "Dell CFJ61",
 					},
 					{
 						Name:       "disk-2",
 						Rotational: false,
-						SizeBytes:  metal3v1alpha1.TebiByte * 93,
+						SizeBytes:  metal3.TebiByte * 93,
 						Model:      "Dell CFJ61",
 					},
 				},
-				CPU: metal3v1alpha1.CPU{
+				CPU: metal3.CPU{
 					Arch:           "x86_64",
 					Model:          "FancyPants CPU",
-					ClockMegahertz: 3.0 * metal3v1alpha1.GigaHertz,
+					ClockMegahertz: 3.0 * metal3.GigaHertz,
 					Flags:          []string{"fpu", "hypervisor", "sse", "vmx"},
 					Count:          1,
 				},

@@ -20,7 +20,7 @@ import (
 	"github.com/go-logr/logr"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
-	metal3v1alpha1 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha1"
+	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 	"github.com/metal3-io/baremetal-operator/pkg/bmc"
 	"github.com/metal3-io/baremetal-operator/pkg/hardware"
 	"github.com/metal3-io/baremetal-operator/pkg/provisioner"
@@ -74,9 +74,9 @@ func init() {
 // and uses Ironic to manage the host.
 type ironicProvisioner struct {
 	// the host to be managed by this provisioner
-	host *metal3v1alpha1.BareMetalHost
+	host *metal3.BareMetalHost
 	// a shorter path to the provisioning status data structure
-	status *metal3v1alpha1.ProvisionStatus
+	status *metal3.ProvisionStatus
 	// access parameters for the BMC
 	bmcAccess bmc.AccessDetails
 	// credentials to log in to the BMC
@@ -104,7 +104,7 @@ func LogStartup() {
 
 // A private function to construct an ironicProvisioner (rather than a
 // Provisioner interface) in a consistent way for tests.
-func newProvisioner(host *metal3v1alpha1.BareMetalHost, bmcCreds bmc.Credentials, publisher provisioner.EventPublisher) (*ironicProvisioner, error) {
+func newProvisioner(host *metal3.BareMetalHost, bmcCreds bmc.Credentials, publisher provisioner.EventPublisher) (*ironicProvisioner, error) {
 	client, err := noauth.NewBareMetalNoAuth(noauth.EndpointOpts{
 		IronicEndpoint: ironicEndpoint,
 	})
@@ -139,7 +139,7 @@ func newProvisioner(host *metal3v1alpha1.BareMetalHost, bmcCreds bmc.Credentials
 }
 
 // New returns a new Ironic Provisioner
-func New(host *metal3v1alpha1.BareMetalHost, bmcCreds bmc.Credentials, publisher provisioner.EventPublisher) (provisioner.Provisioner, error) {
+func New(host *metal3.BareMetalHost, bmcCreds bmc.Credentials, publisher provisioner.EventPublisher) (provisioner.Provisioner, error) {
 	return newProvisioner(host, bmcCreds, publisher)
 }
 
@@ -320,7 +320,7 @@ func (p *ironicProvisioner) ValidateManagementAccess(credentialsChanged bool) (r
 			// parameters are given. We only want to do that for MD5,
 			// however, because those versions of ironic only support
 			// MD5 checksums.
-			if checksumType == string(metal3v1alpha1.MD5) {
+			if checksumType == string(metal3.MD5) {
 				updates = append(
 					updates,
 					nodes.UpdateOperation{
@@ -484,7 +484,7 @@ func (p *ironicProvisioner) changeNodeProvisionState(ironicNode *nodes.Node, opt
 // details of devices discovered on the hardware. It may be called
 // multiple times, and should return true for its dirty flag until the
 // inspection is completed.
-func (p *ironicProvisioner) InspectHardware() (result provisioner.Result, details *metal3v1alpha1.HardwareDetails, err error) {
+func (p *ironicProvisioner) InspectHardware() (result provisioner.Result, details *metal3.HardwareDetails, err error) {
 	p.log.Info("inspecting hardware", "status", p.host.OperationalStatus())
 
 	ironicNode, err := p.findExistingHost()
@@ -659,7 +659,7 @@ func (p *ironicProvisioner) getUpdateOptsForNode(ironicNode *nodes.Node) (update
 	// image, even if the other hash value parameters are given. We
 	// only want to do that for MD5, however, because those versions
 	// of ironic only support MD5 checksums.
-	if checksumType == string(metal3v1alpha1.MD5) {
+	if checksumType == string(metal3.MD5) {
 		if _, ok := ironicNode.InstanceInfo["image_checksum"]; !ok {
 			op = nodes.AddOp
 			p.log.Info("adding image_checksum")

@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	metal3v1alpha1 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha1"
+	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 
 	"github.com/go-logr/logr"
 
@@ -20,7 +20,7 @@ import (
 // hostConfigData is an implementation of host configuration data interface.
 // Object is able to retrive data from secrets referenced in a host spec
 type hostConfigData struct {
-	host   *metal3v1alpha1.BareMetalHost
+	host   *metal3.BareMetalHost
 	log    logr.Logger
 	client client.Client
 }

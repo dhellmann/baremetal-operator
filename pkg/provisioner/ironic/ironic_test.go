@@ -11,7 +11,7 @@ import (
 
 	"github.com/gophercloud/gophercloud/openstack/baremetal/v1/nodes"
 
-	metal3v1alpha1 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha1"
+	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 	"github.com/metal3-io/baremetal-operator/pkg/bmc"
 	"k8s.io/utils/pointer"
 )
@@ -22,19 +22,19 @@ func init() {
 
 func TestGetUpdateOptsForNodeWithRootHints(t *testing.T) {
 	rotational := true
-	host := &metal3v1alpha1.BareMetalHost{
+	host := &metal3.BareMetalHost{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "myhost",
 			Namespace: "myns",
 			UID:       "27720611-e5d1-45d3-ba3a-222dcfaa4ca2",
 		},
-		Spec: metal3v1alpha1.BareMetalHostSpec{
-			Image: &metal3v1alpha1.Image{
+		Spec: metal3.BareMetalHostSpec{
+			Image: &metal3.Image{
 				URL: "not-empty",
 			},
 			Online:          true,
 			HardwareProfile: "libvirt",
-			RootDeviceHints: &metal3v1alpha1.RootDeviceHints{
+			RootDeviceHints: &metal3.RootDeviceHints{
 				DeviceName:         "userd_devicename",
 				HCTL:               "1:2:3:4",
 				Model:              "userd_model",
@@ -47,12 +47,12 @@ func TestGetUpdateOptsForNodeWithRootHints(t *testing.T) {
 				Rotational:         &rotational,
 			},
 		},
-		Status: metal3v1alpha1.BareMetalHostStatus{
-			Provisioning: metal3v1alpha1.ProvisionStatus{
+		Status: metal3.BareMetalHostStatus{
+			Provisioning: metal3.ProvisionStatus{
 				ID: "provisioning-id",
 				// Place the hints in the status field to pretend the
 				// controller has already reconciled partially.
-				RootDeviceHints: &metal3v1alpha1.RootDeviceHints{
+				RootDeviceHints: &metal3.RootDeviceHints{
 					DeviceName:         "userd_devicename",
 					HCTL:               "1:2:3:4",
 					Model:              "userd_model",
@@ -129,24 +129,24 @@ func TestGetUpdateOptsForNodeWithRootHints(t *testing.T) {
 }
 
 func TestGetUpdateOptsForNodeVirtual(t *testing.T) {
-	host := &metal3v1alpha1.BareMetalHost{
+	host := &metal3.BareMetalHost{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "myhost",
 			Namespace: "myns",
 			UID:       "27720611-e5d1-45d3-ba3a-222dcfaa4ca2",
 		},
-		Spec: metal3v1alpha1.BareMetalHostSpec{
-			Image: &metal3v1alpha1.Image{
+		Spec: metal3.BareMetalHostSpec{
+			Image: &metal3.Image{
 				URL:          "not-empty",
 				Checksum:     "checksum",
-				ChecksumType: metal3v1alpha1.MD5,
+				ChecksumType: metal3.MD5,
 				DiskFormat:   pointer.StringPtr("raw"),
 			},
 			Online: true,
 		},
-		Status: metal3v1alpha1.BareMetalHostStatus{
+		Status: metal3.BareMetalHostStatus{
 			HardwareProfile: "libvirt",
-			Provisioning: metal3v1alpha1.ProvisionStatus{
+			Provisioning: metal3.ProvisionStatus{
 				ID: "provisioning-id",
 			},
 		},
@@ -224,24 +224,24 @@ func TestGetUpdateOptsForNodeVirtual(t *testing.T) {
 }
 
 func TestGetUpdateOptsForNodeDell(t *testing.T) {
-	host := &metal3v1alpha1.BareMetalHost{
+	host := &metal3.BareMetalHost{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "myhost",
 			Namespace: "myns",
 			UID:       "27720611-e5d1-45d3-ba3a-222dcfaa4ca2",
 		},
-		Spec: metal3v1alpha1.BareMetalHostSpec{
-			Image: &metal3v1alpha1.Image{
+		Spec: metal3.BareMetalHostSpec{
+			Image: &metal3.Image{
 				URL:          "not-empty",
 				Checksum:     "checksum",
-				ChecksumType: metal3v1alpha1.MD5,
+				ChecksumType: metal3.MD5,
 				//DiskFormat not given to verify it is not added in instance_info
 			},
 			Online: true,
 		},
-		Status: metal3v1alpha1.BareMetalHostStatus{
+		Status: metal3.BareMetalHostStatus{
 			HardwareProfile: "dell",
-			Provisioning: metal3v1alpha1.ProvisionStatus{
+			Provisioning: metal3.ProvisionStatus{
 				ID: "provisioning-id",
 			},
 		},

@@ -10,7 +10,7 @@ import (
 
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	metal3v1alpha1 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha1"
+	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 )
 
 func TestProvisionWithHostConfig(t *testing.T) {
@@ -18,7 +18,7 @@ func TestProvisionWithHostConfig(t *testing.T) {
 
 	testCases := []struct {
 		Scenario            string
-		Host                *metal3v1alpha1.BareMetalHost
+		Host                *metal3.BareMetalHost
 		UserDataSecret      *corev1.Secret
 		NetworkDataSecret   *corev1.Secret
 		ExpectedUserData    string
@@ -31,8 +31,8 @@ func TestProvisionWithHostConfig(t *testing.T) {
 		{
 			Scenario: "host with user data only",
 			Host: newHost("host-user-data",
-				&metal3v1alpha1.BareMetalHostSpec{
-					BMC: metal3v1alpha1.BMCDetails{
+				&metal3.BareMetalHostSpec{
+					BMC: metal3.BMCDetails{
 						Address:         "ipmi://192.168.122.1:6233",
 						CredentialsName: defaultSecretName,
 					},
@@ -50,8 +50,8 @@ func TestProvisionWithHostConfig(t *testing.T) {
 		{
 			Scenario: "host with user data only, no namespace",
 			Host: newHost("host-user-data",
-				&metal3v1alpha1.BareMetalHostSpec{
-					BMC: metal3v1alpha1.BMCDetails{
+				&metal3.BareMetalHostSpec{
+					BMC: metal3.BMCDetails{
 						Address:         "ipmi://192.168.122.1:6233",
 						CredentialsName: defaultSecretName,
 					},
@@ -68,8 +68,8 @@ func TestProvisionWithHostConfig(t *testing.T) {
 		{
 			Scenario: "host with network data only",
 			Host: newHost("host-user-data",
-				&metal3v1alpha1.BareMetalHostSpec{
-					BMC: metal3v1alpha1.BMCDetails{
+				&metal3.BareMetalHostSpec{
+					BMC: metal3.BMCDetails{
 						Address:         "ipmi://192.168.122.1:6233",
 						CredentialsName: defaultSecretName,
 					},
@@ -87,8 +87,8 @@ func TestProvisionWithHostConfig(t *testing.T) {
 		{
 			Scenario: "host with network data only, no namespace",
 			Host: newHost("host-user-data",
-				&metal3v1alpha1.BareMetalHostSpec{
-					BMC: metal3v1alpha1.BMCDetails{
+				&metal3.BareMetalHostSpec{
+					BMC: metal3.BMCDetails{
 						Address:         "ipmi://192.168.122.1:6233",
 						CredentialsName: defaultSecretName,
 					},
@@ -105,8 +105,8 @@ func TestProvisionWithHostConfig(t *testing.T) {
 		{
 			Scenario: "host with metadata only",
 			Host: newHost("host-meta-data",
-				&metal3v1alpha1.BareMetalHostSpec{
-					BMC: metal3v1alpha1.BMCDetails{
+				&metal3.BareMetalHostSpec{
+					BMC: metal3.BMCDetails{
 						Address:         "ipmi://192.168.122.1:6233",
 						CredentialsName: defaultSecretName,
 					},
@@ -122,8 +122,8 @@ func TestProvisionWithHostConfig(t *testing.T) {
 		{
 			Scenario: "host with metadata only, no namespace",
 			Host: newHost("host-meta-data",
-				&metal3v1alpha1.BareMetalHostSpec{
-					BMC: metal3v1alpha1.BMCDetails{
+				&metal3.BareMetalHostSpec{
+					BMC: metal3.BMCDetails{
 						Address:         "ipmi://192.168.122.1:6233",
 						CredentialsName: defaultSecretName,
 					},
@@ -138,8 +138,8 @@ func TestProvisionWithHostConfig(t *testing.T) {
 		{
 			Scenario: "fall back to value",
 			Host: newHost("host-user-data",
-				&metal3v1alpha1.BareMetalHostSpec{
-					BMC: metal3v1alpha1.BMCDetails{
+				&metal3.BareMetalHostSpec{
+					BMC: metal3.BMCDetails{
 						Address:         "ipmi://192.168.122.1:6233",
 						CredentialsName: defaultSecretName,
 					},
@@ -157,8 +157,8 @@ func TestProvisionWithHostConfig(t *testing.T) {
 		{
 			Scenario: "host with non-existent network data",
 			Host: newHost("host-user-data",
-				&metal3v1alpha1.BareMetalHostSpec{
-					BMC: metal3v1alpha1.BMCDetails{
+				&metal3.BareMetalHostSpec{
+					BMC: metal3.BMCDetails{
 						Address:         "ipmi://192.168.122.1:6233",
 						CredentialsName: defaultSecretName,
 					},
@@ -175,8 +175,8 @@ func TestProvisionWithHostConfig(t *testing.T) {
 		{
 			Scenario: "host with wrong key in network data secret",
 			Host: newHost("host-user-data",
-				&metal3v1alpha1.BareMetalHostSpec{
-					BMC: metal3v1alpha1.BMCDetails{
+				&metal3.BareMetalHostSpec{
+					BMC: metal3.BMCDetails{
 						Address:         "ipmi://192.168.122.1:6233",
 						CredentialsName: defaultSecretName,
 					},
@@ -194,8 +194,8 @@ func TestProvisionWithHostConfig(t *testing.T) {
 		{
 			Scenario: "host without keys in user data secret",
 			Host: newHost("host-user-data",
-				&metal3v1alpha1.BareMetalHostSpec{
-					BMC: metal3v1alpha1.BMCDetails{
+				&metal3.BareMetalHostSpec{
+					BMC: metal3.BMCDetails{
 						Address:         "ipmi://192.168.122.1:6233",
 						CredentialsName: defaultSecretName,
 					},
@@ -214,7 +214,7 @@ func TestProvisionWithHostConfig(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Scenario, func(t *testing.T) {
-			tc.Host.Spec.Image = &metal3v1alpha1.Image{
+			tc.Host.Spec.Image = &metal3.Image{
 				URL:      "https://example.com/image-name",
 				Checksum: "12345",
 			}

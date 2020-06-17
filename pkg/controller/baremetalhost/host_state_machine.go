@@ -3,7 +3,7 @@ package baremetalhost
 import (
 	"fmt"
 
-	metal3v1alpha1 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha1"
+	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 	"github.com/metal3-io/baremetal-operator/pkg/provisioner"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -12,13 +12,13 @@ import (
 // hostStateMachine is a finite state machine that manages transitions between
 // the states of a BareMetalHost.
 type hostStateMachine struct {
-	Host        *metal3v1alpha1.BareMetalHost
-	NextState   metal3v1alpha1.ProvisioningState
+	Host        *metal3.BareMetalHost
+	NextState   metal3.ProvisioningState
 	Reconciler  *ReconcileBareMetalHost
 	Provisioner provisioner.Provisioner
 }
 
-func newHostStateMachine(host *metal3v1alpha1.BareMetalHost,
+func newHostStateMachine(host *metal3.BareMetalHost,
 	reconciler *ReconcileBareMetalHost,
 	provisioner provisioner.Provisioner) *hostStateMachine {
 	currentState := host.Status.Provisioning.State
@@ -33,35 +33,35 @@ func newHostStateMachine(host *metal3v1alpha1.BareMetalHost,
 
 type stateHandler func(*reconcileInfo) actionResult
 
-func (hsm *hostStateMachine) handlers() map[metal3v1alpha1.ProvisioningState]stateHandler {
-	return map[metal3v1alpha1.ProvisioningState]stateHandler{
-		metal3v1alpha1.StateNone:                  hsm.handleNone,
-		metal3v1alpha1.StateRegistering:           hsm.handleRegistering,
-		metal3v1alpha1.StateRegistrationError:     hsm.handleRegistrationError,
-		metal3v1alpha1.StateInspecting:            hsm.handleInspecting,
-		metal3v1alpha1.StateExternallyProvisioned: hsm.handleExternallyProvisioned,
-		metal3v1alpha1.StateMatchProfile:          hsm.handleMatchProfile,
-		metal3v1alpha1.StateReady:                 hsm.handleReady,
-		metal3v1alpha1.StateProvisioning:          hsm.handleProvisioning,
-		metal3v1alpha1.StateProvisioningError:     hsm.handleProvisioningError,
-		metal3v1alpha1.StateProvisioned:           hsm.handleProvisioned,
-		metal3v1alpha1.StatePowerManagementError:  hsm.handlePowerManagementError,
-		metal3v1alpha1.StateDeprovisioning:        hsm.handleDeprovisioning,
-		metal3v1alpha1.StateDeleting:              hsm.handleDeleting,
+func (hsm *hostStateMachine) handlers() map[metal3.ProvisioningState]stateHandler {
+	return map[metal3.ProvisioningState]stateHandler{
+		metal3.StateNone:                  hsm.handleNone,
+		metal3.StateRegistering:           hsm.handleRegistering,
+		metal3.StateRegistrationError:     hsm.handleRegistrationError,
+		metal3.StateInspecting:            hsm.handleInspecting,
+		metal3.StateExternallyProvisioned: hsm.handleExternallyProvisioned,
+		metal3.StateMatchProfile:          hsm.handleMatchProfile,
+		metal3.StateReady:                 hsm.handleReady,
+		metal3.StateProvisioning:          hsm.handleProvisioning,
+		metal3.StateProvisioningError:     hsm.handleProvisioningError,
+		metal3.StateProvisioned:           hsm.handleProvisioned,
+		metal3.StatePowerManagementError:  hsm.handlePowerManagementError,
+		metal3.StateDeprovisioning:        hsm.handleDeprovisioning,
+		metal3.StateDeleting:              hsm.handleDeleting,
 	}
 }
 
-func recordStateBegin(host *metal3v1alpha1.BareMetalHost, state metal3v1alpha1.ProvisioningState, time metav1.Time) {
+func recordStateBegin(host *metal3.BareMetalHost, state metal3.ProvisioningState, time metav1.Time) {
 	if nextMetric := host.OperationMetricForState(state); nextMetric != nil {
 		if nextMetric.Start.IsZero() || !nextMetric.End.IsZero() {
-			*nextMetric = metal3v1alpha1.OperationMetric{
+			*nextMetric = metal3.OperationMetric{
 				Start: time,
 			}
 		}
 	}
 }
 
-func recordStateEnd(info *reconcileInfo, host *metal3v1alpha1.BareMetalHost, state metal3v1alpha1.ProvisioningState, time metav1.Time) {
+func recordStateEnd(info *reconcileInfo, host *metal3.BareMetalHost, state metal3.ProvisioningState, time metav1.Time) {
 	if prevMetric := host.OperationMetricForState(state); prevMetric != nil {
 		if !prevMetric.Start.IsZero() {
 			prevMetric.End = time
@@ -73,7 +73,7 @@ func recordStateEnd(info *reconcileInfo, host *metal3v1alpha1.BareMetalHost, sta
 	}
 }
 
-func (hsm *hostStateMachine) updateHostStateFrom(initialState metal3v1alpha1.ProvisioningState,
+func (hsm *hostStateMachine) updateHostStateFrom(initialState metal3.ProvisioningState,
 	info *reconcileInfo) {
 	if hsm.NextState != initialState {
 		info.log.Info("changing provisioning state",
@@ -121,13 +121,13 @@ func (hsm *hostStateMachine) checkInitiateDelete() bool {
 
 	switch hsm.NextState {
 	default:
-		hsm.NextState = metal3v1alpha1.StateDeleting
-	case metal3v1alpha1.StateProvisioning, metal3v1alpha1.StateProvisioningError, metal3v1alpha1.StateProvisioned:
-		hsm.NextState = metal3v1alpha1.StateDeprovisioning
-	case metal3v1alpha1.StateDeprovisioning:
+		hsm.NextState = metal3.StateDeleting
+	case metal3.StateProvisioning, metal3.StateProvisioningError, metal3.StateProvisioned:
+		hsm.NextState = metal3.StateDeprovisioning
+	case metal3.StateDeprovisioning:
 		// Allow state machine to run to continue deprovisioning.
 		return false
-	case metal3v1alpha1.StateDeleting:
+	case metal3.StateDeleting:
 		// Already in deleting state. Allow state machine to run.
 		return false
 	}
@@ -140,13 +140,13 @@ func (hsm *hostStateMachine) shouldInitiateRegister(info *reconcileInfo) bool {
 		switch hsm.NextState {
 		default:
 			changeState = !hsm.Host.Status.GoodCredentials.Match(*info.bmcCredsSecret)
-		case metal3v1alpha1.StateNone:
-		case metal3v1alpha1.StateRegistering, metal3v1alpha1.StateRegistrationError:
-		case metal3v1alpha1.StateDeleting:
+		case metal3.StateNone:
+		case metal3.StateRegistering, metal3.StateRegistrationError:
+		case metal3.StateDeleting:
 		}
 	}
 	if changeState {
-		hsm.NextState = metal3v1alpha1.StateRegistering
+		hsm.NextState = metal3.StateRegistering
 	}
 	return changeState
 }
@@ -155,7 +155,7 @@ func (hsm *hostStateMachine) handleNone(info *reconcileInfo) actionResult {
 	// Running the state machine at all means we have successfully validated
 	// the BMC credentials once, so we can move to the Registering state.
 	hsm.Host.ClearError()
-	hsm.NextState = metal3v1alpha1.StateRegistering
+	hsm.NextState = metal3.StateRegistering
 	return actionComplete{}
 }
 
@@ -170,18 +170,18 @@ func (hsm *hostStateMachine) handleRegistering(info *reconcileInfo) actionResult
 		// eliminate the need to determine which state we came from here.
 		switch {
 		case hsm.Host.Spec.ExternallyProvisioned:
-			hsm.NextState = metal3v1alpha1.StateExternallyProvisioned
+			hsm.NextState = metal3.StateExternallyProvisioned
 		case hsm.Host.WasProvisioned():
-			hsm.NextState = metal3v1alpha1.StateProvisioned
+			hsm.NextState = metal3.StateProvisioned
 		case hsm.Host.NeedsHardwareInspection():
-			hsm.NextState = metal3v1alpha1.StateInspecting
+			hsm.NextState = metal3.StateInspecting
 		case hsm.Host.NeedsHardwareProfile():
-			hsm.NextState = metal3v1alpha1.StateMatchProfile
+			hsm.NextState = metal3.StateMatchProfile
 		default:
-			hsm.NextState = metal3v1alpha1.StateReady
+			hsm.NextState = metal3.StateReady
 		}
 	case actionFailed:
-		hsm.NextState = metal3v1alpha1.StateRegistrationError
+		hsm.NextState = metal3.StateRegistrationError
 	}
 	return actResult
 }
@@ -189,7 +189,7 @@ func (hsm *hostStateMachine) handleRegistering(info *reconcileInfo) actionResult
 func (hsm *hostStateMachine) handleRegistrationError(info *reconcileInfo) actionResult {
 	if !hsm.Host.Status.TriedCredentials.Match(*info.bmcCredsSecret) {
 		info.log.Info("Modified credentials detected; will retry registration")
-		hsm.NextState = metal3v1alpha1.StateRegistering
+		hsm.NextState = metal3.StateRegistering
 		return actionComplete{}
 	}
 	return actionFailed{}
@@ -198,7 +198,7 @@ func (hsm *hostStateMachine) handleRegistrationError(info *reconcileInfo) action
 func (hsm *hostStateMachine) handleInspecting(info *reconcileInfo) actionResult {
 	actResult := hsm.Reconciler.actionInspecting(hsm.Provisioner, info)
 	if _, complete := actResult.(actionComplete); complete {
-		hsm.NextState = metal3v1alpha1.StateMatchProfile
+		hsm.NextState = metal3.StateMatchProfile
 	}
 	return actResult
 }
@@ -206,7 +206,7 @@ func (hsm *hostStateMachine) handleInspecting(info *reconcileInfo) actionResult 
 func (hsm *hostStateMachine) handleMatchProfile(info *reconcileInfo) actionResult {
 	actResult := hsm.Reconciler.actionMatchProfile(hsm.Provisioner, info)
 	if _, complete := actResult.(actionComplete); complete {
-		hsm.NextState = metal3v1alpha1.StateReady
+		hsm.NextState = metal3.StateReady
 	}
 	return actResult
 }
@@ -216,10 +216,10 @@ func (hsm *hostStateMachine) handleExternallyProvisioned(info *reconcileInfo) ac
 		actResult := hsm.Reconciler.actionManageSteadyState(hsm.Provisioner, info)
 		if r, f := actResult.(actionFailed); f {
 			switch r.ErrorType {
-			case metal3v1alpha1.PowerManagementError:
-				hsm.NextState = metal3v1alpha1.StatePowerManagementError
-			case metal3v1alpha1.RegistrationError:
-				hsm.NextState = metal3v1alpha1.StateRegistrationError
+			case metal3.PowerManagementError:
+				hsm.NextState = metal3.StatePowerManagementError
+			case metal3.RegistrationError:
+				hsm.NextState = metal3.StateRegistrationError
 			}
 		}
 		return actResult
@@ -227,18 +227,18 @@ func (hsm *hostStateMachine) handleExternallyProvisioned(info *reconcileInfo) ac
 
 	switch {
 	case hsm.Host.NeedsHardwareInspection():
-		hsm.NextState = metal3v1alpha1.StateInspecting
+		hsm.NextState = metal3.StateInspecting
 	case hsm.Host.NeedsHardwareProfile():
-		hsm.NextState = metal3v1alpha1.StateMatchProfile
+		hsm.NextState = metal3.StateMatchProfile
 	default:
-		hsm.NextState = metal3v1alpha1.StateReady
+		hsm.NextState = metal3.StateReady
 	}
 	return actionComplete{}
 }
 
 func (hsm *hostStateMachine) handleReady(info *reconcileInfo) actionResult {
 	if hsm.Host.Spec.ExternallyProvisioned {
-		hsm.NextState = metal3v1alpha1.StateExternallyProvisioned
+		hsm.NextState = metal3.StateExternallyProvisioned
 		return actionComplete{}
 	}
 
@@ -246,13 +246,13 @@ func (hsm *hostStateMachine) handleReady(info *reconcileInfo) actionResult {
 
 	switch r := actResult.(type) {
 	case actionComplete:
-		hsm.NextState = metal3v1alpha1.StateProvisioning
+		hsm.NextState = metal3.StateProvisioning
 	case actionFailed:
 		switch r.ErrorType {
-		case metal3v1alpha1.PowerManagementError:
-			hsm.NextState = metal3v1alpha1.StatePowerManagementError
-		case metal3v1alpha1.RegistrationError:
-			hsm.NextState = metal3v1alpha1.StateRegistrationError
+		case metal3.PowerManagementError:
+			hsm.NextState = metal3.StatePowerManagementError
+		case metal3.RegistrationError:
+			hsm.NextState = metal3.StateRegistrationError
 		}
 	}
 	return actResult
@@ -260,16 +260,16 @@ func (hsm *hostStateMachine) handleReady(info *reconcileInfo) actionResult {
 
 func (hsm *hostStateMachine) handleProvisioning(info *reconcileInfo) actionResult {
 	if hsm.Host.NeedsDeprovisioning() {
-		hsm.NextState = metal3v1alpha1.StateDeprovisioning
+		hsm.NextState = metal3.StateDeprovisioning
 		return actionComplete{}
 	}
 
 	actResult := hsm.Reconciler.actionProvisioning(hsm.Provisioner, info)
 	switch actResult.(type) {
 	case actionComplete:
-		hsm.NextState = metal3v1alpha1.StateProvisioned
+		hsm.NextState = metal3.StateProvisioned
 	case actionFailed:
-		hsm.NextState = metal3v1alpha1.StateProvisioningError
+		hsm.NextState = metal3.StateProvisioningError
 	}
 	return actResult
 }
@@ -277,26 +277,26 @@ func (hsm *hostStateMachine) handleProvisioning(info *reconcileInfo) actionResul
 func (hsm *hostStateMachine) handleProvisioningError(info *reconcileInfo) actionResult {
 	switch {
 	case hsm.Host.Spec.ExternallyProvisioned:
-		hsm.NextState = metal3v1alpha1.StateExternallyProvisioned
+		hsm.NextState = metal3.StateExternallyProvisioned
 	default:
-		hsm.NextState = metal3v1alpha1.StateDeprovisioning
+		hsm.NextState = metal3.StateDeprovisioning
 	}
 	return actionComplete{}
 }
 
 func (hsm *hostStateMachine) handleProvisioned(info *reconcileInfo) actionResult {
 	if hsm.Host.NeedsDeprovisioning() {
-		hsm.NextState = metal3v1alpha1.StateDeprovisioning
+		hsm.NextState = metal3.StateDeprovisioning
 		return actionComplete{}
 	}
 
 	actResult := hsm.Reconciler.actionManageSteadyState(hsm.Provisioner, info)
 	if r, f := actResult.(actionFailed); f {
 		switch r.ErrorType {
-		case metal3v1alpha1.PowerManagementError:
-			hsm.NextState = metal3v1alpha1.StatePowerManagementError
-		case metal3v1alpha1.RegistrationError:
-			hsm.NextState = metal3v1alpha1.StateRegistrationError
+		case metal3.PowerManagementError:
+			hsm.NextState = metal3.StatePowerManagementError
+		case metal3.RegistrationError:
+			hsm.NextState = metal3.StateRegistrationError
 		}
 	}
 	return actResult
@@ -305,11 +305,11 @@ func (hsm *hostStateMachine) handleProvisioned(info *reconcileInfo) actionResult
 func (hsm *hostStateMachine) handlePowerManagementError(info *reconcileInfo) actionResult {
 	switch {
 	case hsm.Host.Spec.ExternallyProvisioned:
-		hsm.NextState = metal3v1alpha1.StateExternallyProvisioned
+		hsm.NextState = metal3.StateExternallyProvisioned
 	case hsm.Host.WasProvisioned():
-		hsm.NextState = metal3v1alpha1.StateProvisioned
+		hsm.NextState = metal3.StateProvisioned
 	default:
-		hsm.NextState = metal3v1alpha1.StateReady
+		hsm.NextState = metal3.StateReady
 	}
 	return actionComplete{}
 }
@@ -320,9 +320,9 @@ func (hsm *hostStateMachine) handleDeprovisioning(info *reconcileInfo) actionRes
 	switch actResult.(type) {
 	case actionComplete:
 		if !hsm.Host.DeletionTimestamp.IsZero() {
-			hsm.NextState = metal3v1alpha1.StateDeleting
+			hsm.NextState = metal3.StateDeleting
 		} else {
-			hsm.NextState = metal3v1alpha1.StateReady
+			hsm.NextState = metal3.StateReady
 		}
 	case actionFailed:
 		if !hsm.Host.DeletionTimestamp.IsZero() {
@@ -331,11 +331,11 @@ func (hsm *hostStateMachine) handleDeprovisioning(info *reconcileInfo) actionRes
 			// Note that this is entirely theoretical, as the
 			// Ironic provisioner currently never gives up
 			// trying to deprovision.
-			hsm.NextState = metal3v1alpha1.StateDeleting
+			hsm.NextState = metal3.StateDeleting
 			info.postSaveCallbacks = append(info.postSaveCallbacks, deleteWithoutDeprov.Inc)
 			actResult = actionComplete{}
 		} else {
-			hsm.NextState = metal3v1alpha1.StateProvisioningError
+			hsm.NextState = metal3.StateProvisioningError
 		}
 	}
 	return actResult

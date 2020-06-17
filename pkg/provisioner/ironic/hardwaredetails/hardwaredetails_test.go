@@ -6,7 +6,7 @@ import (
 
 	"github.com/gophercloud/gophercloud/openstack/baremetalintrospection/v1/introspection"
 
-	metal3v1alpha1 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha1"
+	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 )
 
 func TestGetVLANs(t *testing.T) {
@@ -31,10 +31,10 @@ func TestGetVLANs(t *testing.T) {
 	if len(vlans) != 2 {
 		t.Errorf("Expected 2 VLANs, got %d", len(vlans))
 	}
-	if (vlans[0] != metal3v1alpha1.VLAN{ID: 1, Name: "vlan1"}) {
+	if (vlans[0] != metal3.VLAN{ID: 1, Name: "vlan1"}) {
 		t.Errorf("Unexpected VLAN %d %s", vlans[0].ID, vlans[0].Name)
 	}
-	if (vlans[1] != metal3v1alpha1.VLAN{ID: 4094, Name: "vlan4094"}) {
+	if (vlans[1] != metal3.VLAN{ID: 4094, Name: "vlan4094"}) {
 		t.Errorf("Unexpected VLAN %d %s", vlans[1].ID, vlans[1].Name)
 	}
 }
@@ -72,19 +72,19 @@ func TestGetVLANsMalformed(t *testing.T) {
 	if len(vlans) != 5 {
 		t.Errorf("Expected 5 VLANs, got %d", len(vlans))
 	}
-	if (vlans[0] != metal3v1alpha1.VLAN{Name: "vlan1"}) {
+	if (vlans[0] != metal3.VLAN{Name: "vlan1"}) {
 		t.Errorf("Unexpected VLAN %d %s", vlans[0].ID, vlans[0].Name)
 	}
-	if (vlans[1] != metal3v1alpha1.VLAN{ID: 1}) {
+	if (vlans[1] != metal3.VLAN{ID: 1}) {
 		t.Errorf("Unexpected VLAN %d %s", vlans[0].ID, vlans[0].Name)
 	}
-	if (vlans[2] != metal3v1alpha1.VLAN{Name: "vlan2"}) {
+	if (vlans[2] != metal3.VLAN{Name: "vlan2"}) {
 		t.Errorf("Unexpected VLAN %d %s", vlans[0].ID, vlans[0].Name)
 	}
-	if (vlans[3] != metal3v1alpha1.VLAN{ID: 3}) {
+	if (vlans[3] != metal3.VLAN{ID: 3}) {
 		t.Errorf("Unexpected VLAN %d %s", vlans[0].ID, vlans[0].Name)
 	}
-	if (vlans[4] != metal3v1alpha1.VLAN{}) {
+	if (vlans[4] != metal3.VLAN{}) {
 		t.Errorf("Unexpected VLAN %d %s", vlans[0].ID, vlans[0].Name)
 	}
 
@@ -182,19 +182,19 @@ func TestGetNICDetails(t *testing.T) {
 	if len(nics) != 2 {
 		t.Errorf("Expected 2 NICs, got %d", len(nics))
 	}
-	if (!reflect.DeepEqual(nics[0], metal3v1alpha1.NIC{
+	if (!reflect.DeepEqual(nics[0], metal3.NIC{
 		Name: "eth0",
 		MAC:  "00:11:22:33:44:55",
 		IP:   "192.0.2.1",
 		PXE:  true,
-		VLANs: []metal3v1alpha1.VLAN{
+		VLANs: []metal3.VLAN{
 			{ID: 1},
 		},
 		VLANID: 1,
 	})) {
 		t.Errorf("Unexpected NIC data")
 	}
-	if (!reflect.DeepEqual(nics[1], metal3v1alpha1.NIC{
+	if (!reflect.DeepEqual(nics[1], metal3.NIC{
 		Name:      "eth1",
 		MAC:       "66:77:88:99:aa:bb",
 		IP:        "2001:db8::1",
@@ -270,7 +270,7 @@ func TestGetFirmwareDetails(t *testing.T) {
 	// Finally, ensure we can handle completely empty firmware data
 	firmware = getFirmwareDetails(introspection.ExtraHardwareDataSection{})
 
-	if (firmware != metal3v1alpha1.Firmware{}) {
+	if (firmware != metal3.Firmware{}) {
 		t.Errorf("Expected firmware data to be empty but got: %s", firmware)
 	}
 

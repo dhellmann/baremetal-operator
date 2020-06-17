@@ -3,12 +3,12 @@ package devicehints
 import (
 	"fmt"
 
-	metal3v1alpha1 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha1"
+	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 )
 
 // MakeHintMap converts a RootDeviceHints instance into a string map
 // suitable to pass to ironic.
-func MakeHintMap(source *metal3v1alpha1.RootDeviceHints) map[string]string {
+func MakeHintMap(source *metal3.RootDeviceHints) map[string]string {
 	hints := map[string]string{}
 
 	if source == nil {

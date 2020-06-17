@@ -6,12 +6,12 @@ import (
 	"strings"
 
 	"github.com/gophercloud/gophercloud/openstack/baremetalintrospection/v1/introspection"
-	metal3v1alpha1 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha1"
+	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 )
 
 // GetHardwareDetails converts Ironic introspection data into BareMetalHost HardwareDetails.
-func GetHardwareDetails(data *introspection.Data) *metal3v1alpha1.HardwareDetails {
-	details := new(metal3v1alpha1.HardwareDetails)
+func GetHardwareDetails(data *introspection.Data) *metal3.HardwareDetails {
+	details := new(metal3.HardwareDetails)
 	details.Firmware = getFirmwareDetails(data.Extra.Firmware)
 	details.SystemVendor = getSystemVendorDetails(data.Inventory.SystemVendor)
 	details.RAMMebibytes = data.MemoryMB
@@ -22,25 +22,25 @@ func GetHardwareDetails(data *introspection.Data) *metal3v1alpha1.HardwareDetail
 	return details
 }
 
-func getVLANs(intf introspection.BaseInterfaceType) (vlans []metal3v1alpha1.VLAN, vlanid metal3v1alpha1.VLANID) {
+func getVLANs(intf introspection.BaseInterfaceType) (vlans []metal3.VLAN, vlanid metal3.VLANID) {
 	if intf.LLDPProcessed == nil {
 		return
 	}
 	if spvs, ok := intf.LLDPProcessed["switch_port_vlans"]; ok {
 		if data, ok := spvs.([]map[string]interface{}); ok {
-			vlans = make([]metal3v1alpha1.VLAN, len(data))
+			vlans = make([]metal3.VLAN, len(data))
 			for i, vlan := range data {
 				vid, _ := vlan["id"].(int)
 				name, _ := vlan["name"].(string)
-				vlans[i] = metal3v1alpha1.VLAN{
-					ID:   metal3v1alpha1.VLANID(vid),
+				vlans[i] = metal3.VLAN{
+					ID:   metal3.VLANID(vid),
 					Name: name,
 				}
 			}
 		}
 	}
 	if vid, ok := intf.LLDPProcessed["switch_port_untagged_vlan_id"].(int); ok {
-		vlanid = metal3v1alpha1.VLANID(vid)
+		vlanid = metal3.VLANID(vid)
 	}
 	return
 }
@@ -56,8 +56,8 @@ func getNICSpeedGbps(intfExtradata introspection.ExtraHardwareData) (speedGbps i
 
 func getNICDetails(ifdata []introspection.InterfaceType,
 	basedata map[string]introspection.BaseInterfaceType,
-	extradata introspection.ExtraHardwareDataSection) []metal3v1alpha1.NIC {
-	nics := make([]metal3v1alpha1.NIC, len(ifdata))
+	extradata introspection.ExtraHardwareDataSection) []metal3.NIC {
+	nics := make([]metal3.NIC, len(ifdata))
 	for i, intf := range ifdata {
 		baseIntf := basedata[intf.Name]
 		vlans, vlanid := getVLANs(baseIntf)
@@ -65,7 +65,7 @@ func getNICDetails(ifdata []introspection.InterfaceType,
 		if ip == "" {
 			ip = intf.IPV6Address
 		}
-		nics[i] = metal3v1alpha1.NIC{
+		nics[i] = metal3.NIC{
 			Name: intf.Name,
 			Model: strings.TrimLeft(fmt.Sprintf("%s %s",
 				intf.Vendor, intf.Product), " "),
@@ -80,13 +80,13 @@ func getNICDetails(ifdata []introspection.InterfaceType,
 	return nics
 }
 
-func getStorageDetails(diskdata []introspection.RootDiskType) []metal3v1alpha1.Storage {
-	storage := make([]metal3v1alpha1.Storage, len(diskdata))
+func getStorageDetails(diskdata []introspection.RootDiskType) []metal3.Storage {
+	storage := make([]metal3.Storage, len(diskdata))
 	for i, disk := range diskdata {
-		storage[i] = metal3v1alpha1.Storage{
+		storage[i] = metal3.Storage{
 			Name:               disk.Name,
 			Rotational:         disk.Rotational,
-			SizeBytes:          metal3v1alpha1.Capacity(disk.Size),
+			SizeBytes:          metal3.Capacity(disk.Size),
 			Vendor:             disk.Vendor,
 			Model:              disk.Model,
 			SerialNumber:       disk.Serial,
@@ -99,22 +99,22 @@ func getStorageDetails(diskdata []introspection.RootDiskType) []metal3v1alpha1.S
 	return storage
 }
 
-func getSystemVendorDetails(vendor introspection.SystemVendorType) metal3v1alpha1.HardwareSystemVendor {
-	return metal3v1alpha1.HardwareSystemVendor{
+func getSystemVendorDetails(vendor introspection.SystemVendorType) metal3.HardwareSystemVendor {
+	return metal3.HardwareSystemVendor{
 		Manufacturer: vendor.Manufacturer,
 		ProductName:  vendor.ProductName,
 		SerialNumber: vendor.SerialNumber,
 	}
 }
 
-func getCPUDetails(cpudata *introspection.CPUType) metal3v1alpha1.CPU {
+func getCPUDetails(cpudata *introspection.CPUType) metal3.CPU {
 	var freq float64
 	fmt.Sscanf(cpudata.Frequency, "%f", &freq)
 	sort.Strings(cpudata.Flags)
-	cpu := metal3v1alpha1.CPU{
+	cpu := metal3.CPU{
 		Arch:           cpudata.Architecture,
 		Model:          cpudata.ModelName,
-		ClockMegahertz: metal3v1alpha1.ClockSpeed(freq) * metal3v1alpha1.MegaHertz,
+		ClockMegahertz: metal3.ClockSpeed(freq) * metal3.MegaHertz,
 		Count:          cpudata.Count,
 		Flags:          cpudata.Flags,
 	}
@@ -122,10 +122,10 @@ func getCPUDetails(cpudata *introspection.CPUType) metal3v1alpha1.CPU {
 	return cpu
 }
 
-func getFirmwareDetails(firmwaredata introspection.ExtraHardwareDataSection) metal3v1alpha1.Firmware {
+func getFirmwareDetails(firmwaredata introspection.ExtraHardwareDataSection) metal3.Firmware {
 
 	// handle bios optionally
-	var bios metal3v1alpha1.BIOS
+	var bios metal3.BIOS
 
 	if biosdata, ok := firmwaredata["bios"]; ok {
 		// we do not know if all fields will be supplied
@@ -136,7 +136,7 @@ func getFirmwareDetails(firmwaredata introspection.ExtraHardwareDataSection) met
 		bios.Date, _ = biosdata["date"].(string)
 	}
 
-	return metal3v1alpha1.Firmware{
+	return metal3.Firmware{
 		BIOS: bios,
 	}
 

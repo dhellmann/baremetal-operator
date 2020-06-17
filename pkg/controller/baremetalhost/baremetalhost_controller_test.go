@@ -22,6 +22,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
 	metal3apis "github.com/metal3-io/baremetal-operator/pkg/apis"
+	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
 	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 	"github.com/metal3-io/baremetal-operator/pkg/provisioner/fixture"
 	"github.com/metal3-io/baremetal-operator/pkg/utils"
@@ -202,7 +203,7 @@ func waitForProvisioningState(t *testing.T, r *ReconcileBareMetalHost, host *met
 func TestStatusAnnotation_EmptyStatus(t *testing.T) {
 	host := newDefaultHost(t)
 	host.Annotations = map[string]string{
-		metal3.StatusAnnotation: statusAnnotation,
+		metal3shared.StatusAnnotation: statusAnnotation,
 	}
 	host.Spec.Online = true
 	host.Spec.Image = &metal3.Image{URL: "foo", Checksum: "123"}
@@ -224,7 +225,7 @@ func TestStatusAnnotation_EmptyStatus(t *testing.T) {
 func TestStatusAnnotation_StatusPresent(t *testing.T) {
 	host := newDefaultHost(t)
 	host.Annotations = map[string]string{
-		metal3.StatusAnnotation: statusAnnotation,
+		metal3shared.StatusAnnotation: statusAnnotation,
 	}
 	host.Spec.Online = true
 	time := metav1.Now()
@@ -262,7 +263,7 @@ func TestStatusAnnotation_Partial(t *testing.T) {
 
 	host := newDefaultHost(t)
 	host.Annotations = map[string]string{
-		metal3.StatusAnnotation: string(packedStatus),
+		metal3shared.StatusAnnotation: string(packedStatus),
 	}
 	host.Spec.Online = true
 	host.Spec.Image = &metal3.Image{URL: "foo", Checksum: "123"}
@@ -289,7 +290,7 @@ func TestStatusAnnotation(t *testing.T) {
 
 	tryReconcile(t, r, host,
 		func(host *metal3.BareMetalHost, result reconcile.Result) bool {
-			if utils.StringInList(host.Finalizers, metal3.BareMetalHostFinalizer) {
+			if utils.StringInList(host.Finalizers, metal3shared.BareMetalHostFinalizer) {
 				return true
 			}
 			return false
@@ -314,7 +315,7 @@ func TestStatusAnnotation(t *testing.T) {
 func TestPause(t *testing.T) {
 	host := newDefaultHost(t)
 	host.Annotations = map[string]string{
-		metal3.PausedAnnotation: "true",
+		metal3shared.PausedAnnotation: "true",
 	}
 	r := newTestReconciler(host)
 
@@ -338,7 +339,7 @@ func TestAddFinalizers(t *testing.T) {
 	tryReconcile(t, r, host,
 		func(host *metal3.BareMetalHost, result reconcile.Result) bool {
 			t.Logf("finalizers: %v", host.ObjectMeta.Finalizers)
-			if utils.StringInList(host.ObjectMeta.Finalizers, metal3.BareMetalHostFinalizer) {
+			if utils.StringInList(host.ObjectMeta.Finalizers, metal3shared.BareMetalHostFinalizer) {
 				return true
 			}
 			return false
@@ -1015,14 +1016,14 @@ func TestDeleteHost(t *testing.T) {
 		func() *metal3.BareMetalHost {
 			host := newDefaultNamedHost("with-finalizer", t)
 			host.Finalizers = append(host.Finalizers,
-				metal3.BareMetalHostFinalizer)
+				metal3shared.BareMetalHostFinalizer)
 			return host
 		},
 		func() *metal3.BareMetalHost {
 			host := newDefaultNamedHost("without-bmc", t)
 			host.Spec.BMC = metal3.BMCDetails{}
 			host.Finalizers = append(host.Finalizers,
-				metal3.BareMetalHostFinalizer)
+				metal3shared.BareMetalHostFinalizer)
 			return host
 		},
 		func() *metal3.BareMetalHost {
@@ -1035,14 +1036,14 @@ func TestDeleteHost(t *testing.T) {
 					},
 				})
 			host.Finalizers = append(host.Finalizers,
-				metal3.BareMetalHostFinalizer)
+				metal3shared.BareMetalHostFinalizer)
 			return host
 		},
 		func() *metal3.BareMetalHost {
 			host := newDefaultNamedHost("host-with-hw-details", t)
 			host.Status.HardwareDetails = &metal3.HardwareDetails{}
 			host.Finalizers = append(host.Finalizers,
-				metal3.BareMetalHostFinalizer)
+				metal3shared.BareMetalHostFinalizer)
 			return host
 		},
 		func() *metal3.BareMetalHost {
@@ -1054,7 +1055,7 @@ func TestDeleteHost(t *testing.T) {
 			}
 			host.Spec.Image = &host.Status.Provisioning.Image
 			host.Finalizers = append(host.Finalizers,
-				metal3.BareMetalHostFinalizer)
+				metal3shared.BareMetalHostFinalizer)
 			return host
 		},
 	}

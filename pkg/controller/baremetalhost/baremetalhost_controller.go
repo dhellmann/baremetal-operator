@@ -13,6 +13,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
 	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 	"github.com/metal3-io/baremetal-operator/pkg/bmc"
 	"github.com/metal3-io/baremetal-operator/pkg/hardware"
@@ -195,7 +196,7 @@ func (r *ReconcileBareMetalHost) Reconcile(request reconcile.Request) (result re
 	// If the reconciliation is paused, requeue
 	annotations := host.GetAnnotations()
 	if annotations != nil {
-		if _, ok := annotations[metal3.PausedAnnotation]; ok {
+		if _, ok := annotations[metal3shared.PausedAnnotation]; ok {
 			return reconcile.Result{Requeue: true, RequeueAfter: pauseRetryDelay}, nil
 		}
 	}
@@ -233,10 +234,10 @@ func (r *ReconcileBareMetalHost) Reconcile(request reconcile.Request) (result re
 		reqLogger.Info(
 			"adding finalizer",
 			"existingFinalizers", host.Finalizers,
-			"newValue", metal3.BareMetalHostFinalizer,
+			"newValue", metal3shared.BareMetalHostFinalizer,
 		)
 		host.Finalizers = append(host.Finalizers,
-			metal3.BareMetalHostFinalizer)
+			metal3shared.BareMetalHostFinalizer)
 		err := r.client.Update(context.TODO(), host)
 		if err != nil {
 			return reconcile.Result{}, errors.Wrap(err, "failed to add finalizer")
@@ -310,7 +311,7 @@ func (r *ReconcileBareMetalHost) Reconcile(request reconcile.Request) (result re
 func logResult(info *reconcileInfo, result reconcile.Result) {
 	if result.Requeue || result.RequeueAfter != 0 ||
 		!utils.StringInList(info.host.Finalizers,
-			metal3.BareMetalHostFinalizer) {
+			metal3shared.BareMetalHostFinalizer) {
 		info.log.Info("done",
 			"requeue", result.Requeue,
 			"after", result.RequeueAfter)
@@ -435,7 +436,7 @@ func (r *ReconcileBareMetalHost) actionDeleting(prov provisioner.Provisioner, in
 	)
 
 	// no-op if finalizer has been removed.
-	if !utils.StringInList(info.host.Finalizers, metal3.BareMetalHostFinalizer) {
+	if !utils.StringInList(info.host.Finalizers, metal3shared.BareMetalHostFinalizer) {
 		info.log.Info("ready to be deleted")
 		return deleteComplete{}
 	}
@@ -450,7 +451,7 @@ func (r *ReconcileBareMetalHost) actionDeleting(prov provisioner.Provisioner, in
 
 	// Remove finalizer to allow deletion
 	info.host.Finalizers = utils.FilterStringFromList(
-		info.host.Finalizers, metal3.BareMetalHostFinalizer)
+		info.host.Finalizers, metal3shared.BareMetalHostFinalizer)
 	info.log.Info("cleanup is complete, removed finalizer",
 		"remaining", info.host.Finalizers)
 	if err := r.client.Update(context.Background(), info.host); err != nil {
@@ -872,7 +873,7 @@ func (r *ReconcileBareMetalHost) saveHostAnnotation(host *metal3.BareMetalHost) 
 		}
 	}
 
-	delete(host.Annotations, metal3.StatusAnnotation)
+	delete(host.Annotations, metal3shared.StatusAnnotation)
 	newAnnotation, err := marshalStatusAnnotation(&host.Status)
 	if err != nil {
 		return err
@@ -880,7 +881,7 @@ func (r *ReconcileBareMetalHost) saveHostAnnotation(host *metal3.BareMetalHost) 
 	if host.Annotations == nil {
 		host.Annotations = make(map[string]string)
 	}
-	host.Annotations[metal3.StatusAnnotation] = string(newAnnotation)
+	host.Annotations[metal3shared.StatusAnnotation] = string(newAnnotation)
 	return r.client.Update(context.TODO(), host.DeepCopy())
 }
 
@@ -903,8 +904,8 @@ func unmarshalStatusAnnotation(content []byte) (*metal3.BareMetalHostStatus, err
 // extract host from Status annotation
 func (r *ReconcileBareMetalHost) getHostStatusFromAnnotation(host *metal3.BareMetalHost) (*metal3.BareMetalHostStatus, error) {
 	annotations := host.GetAnnotations()
-	content := []byte(annotations[metal3.StatusAnnotation])
-	if annotations[metal3.StatusAnnotation] == "" {
+	content := []byte(annotations[metal3shared.StatusAnnotation])
+	if annotations[metal3shared.StatusAnnotation] == "" {
 		return nil, nil
 	}
 	objStatus, err := unmarshalStatusAnnotation(content)
@@ -1036,5 +1037,5 @@ func (r *ReconcileBareMetalHost) hostHasStatus(host *metal3.BareMetalHost) bool 
 }
 
 func hostHasFinalizer(host *metal3.BareMetalHost) bool {
-	return utils.StringInList(host.Finalizers, metal3.BareMetalHostFinalizer)
+	return utils.StringInList(host.Finalizers, metal3shared.BareMetalHostFinalizer)
 }

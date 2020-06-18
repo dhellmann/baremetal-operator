@@ -73,12 +73,12 @@ func TestGetUpdateOptsForNodeWithRootHints(t *testing.T) {
 	eventPublisher := func(reason, message string) {}
 
 	prov, err := newProvisioner(host, bmc.Credentials{}, eventPublisher)
-	ironicNode := &nodes.Node{}
-
-	patches, err := prov.getUpdateOptsForNode(ironicNode)
 	if err != nil {
 		t.Fatal(err)
 	}
+	ironicNode := &nodes.Node{}
+
+	patches := prov.getUpdateOptsForNode(ironicNode)
 
 	t.Logf("patches: %v", patches)
 
@@ -156,12 +156,12 @@ func TestGetUpdateOptsForNodeVirtual(t *testing.T) {
 	eventPublisher := func(reason, message string) {}
 
 	prov, err := newProvisioner(host, bmc.Credentials{}, eventPublisher)
-	ironicNode := &nodes.Node{}
-
-	patches, err := prov.getUpdateOptsForNode(ironicNode)
 	if err != nil {
 		t.Fatal(err)
 	}
+	ironicNode := &nodes.Node{}
+
+	patches := prov.getUpdateOptsForNode(ironicNode)
 
 	t.Logf("patches: %v", patches)
 
@@ -251,12 +251,12 @@ func TestGetUpdateOptsForNodeDell(t *testing.T) {
 	eventPublisher := func(reason, message string) {}
 
 	prov, err := newProvisioner(host, bmc.Credentials{}, eventPublisher)
-	ironicNode := &nodes.Node{}
-
-	patches, err := prov.getUpdateOptsForNode(ironicNode)
 	if err != nil {
 		t.Fatal(err)
 	}
+	ironicNode := &nodes.Node{}
+
+	patches := prov.getUpdateOptsForNode(ironicNode)
 
 	t.Logf("patches: %v", patches)
 

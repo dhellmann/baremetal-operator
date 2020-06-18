@@ -23,7 +23,6 @@ import (
 	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
 	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 	"github.com/metal3-io/baremetal-operator/pkg/bmc"
-	"github.com/metal3-io/baremetal-operator/pkg/hardware"
 	"github.com/metal3-io/baremetal-operator/pkg/provisioner"
 	"github.com/metal3-io/baremetal-operator/pkg/provisioner/ironic/devicehints"
 	"github.com/metal3-io/baremetal-operator/pkg/provisioner/ironic/hardwaredetails"
@@ -588,15 +587,7 @@ func (p *ironicProvisioner) UpdateHardwareState() (result provisioner.Result, er
 	return result, nil
 }
 
-func (p *ironicProvisioner) getUpdateOptsForNode(ironicNode *nodes.Node) (updates nodes.UpdateOpts, err error) {
-
-	hwProf, err := hardware.GetProfile(p.host.HardwareProfile())
-
-	if err != nil {
-		return updates, errors.Wrap(err,
-			fmt.Sprintf("Could not start provisioning with bad hardware profile %s",
-				p.host.HardwareProfile()))
-	}
+func (p *ironicProvisioner) getUpdateOptsForNode(ironicNode *nodes.Node) (updates nodes.UpdateOpts) {
 
 	// image_source
 	var op nodes.UpdateOp
@@ -714,7 +705,7 @@ func (p *ironicProvisioner) getUpdateOptsForNode(ironicNode *nodes.Node) (update
 		nodes.UpdateOperation{
 			Op:    op,
 			Path:  "/instance_info/root_gb",
-			Value: hwProf.RootGB,
+			Value: 10,
 		},
 	)
 
@@ -731,11 +722,6 @@ func (p *ironicProvisioner) getUpdateOptsForNode(ironicNode *nodes.Node) (update
 		op = nodes.ReplaceOp
 		p.log.Info("updating root_device")
 	}
-
-	// hints
-	//
-	// If the user has provided explicit root device hints, they take
-	// precedence. Otherwise use the values from the hardware profile.
 	hints := devicehints.MakeHintMap(p.host.Status.Provisioning.RootDeviceHints)
 	p.log.Info("using root device", "hints", hints)
 	updates = append(
@@ -763,7 +749,7 @@ func (p *ironicProvisioner) getUpdateOptsForNode(ironicNode *nodes.Node) (update
 		nodes.UpdateOperation{
 			Op:    op,
 			Path:  "/properties/cpu_arch",
-			Value: hwProf.CPUArch,
+			Value: "x86_64",
 		},
 	)
 
@@ -780,18 +766,18 @@ func (p *ironicProvisioner) getUpdateOptsForNode(ironicNode *nodes.Node) (update
 		nodes.UpdateOperation{
 			Op:    op,
 			Path:  "/properties/local_gb",
-			Value: hwProf.LocalGB,
+			Value: 50,
 		},
 	)
 
-	return updates, nil
+	return updates
 }
 
 func (p *ironicProvisioner) startProvisioning(ironicNode *nodes.Node, hostConf provisioner.HostConfigData) (result provisioner.Result, err error) {
 
 	p.log.Info("starting provisioning")
 
-	updates, err := p.getUpdateOptsForNode(ironicNode)
+	updates := p.getUpdateOptsForNode(ironicNode)
 	_, err = nodes.Update(p.client, ironicNode.UUID, updates).Extract()
 	switch err.(type) {
 	case nil:

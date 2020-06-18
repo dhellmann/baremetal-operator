@@ -6,6 +6,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
+	metal3v1alpha1 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha1"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have
@@ -79,11 +80,11 @@ type BareMetalHostSpec struct {
 // data structures.
 
 // ClockSpeed is a clock speed in MHz
-type ClockSpeed float64
+type ClockSpeed int32
 
 // ClockSpeed multipliers
 const (
-	MegaHertz ClockSpeed = 1.0
+	MegaHertz ClockSpeed = 1
 	GigaHertz            = 1000 * MegaHertz
 )
 
@@ -148,6 +149,41 @@ type BareMetalHostStatus struct {
 	// OperationHistory holds information about operations performed
 	// on this host.
 	OperationHistory metal3shared.OperationHistory `json:"operationHistory"`
+}
+
+func upgradeHardwareDetails(a1 *metal3v1alpha1.HardwareDetails, a2 *HardwareDetails) {
+	a2.SystemVendor = a1.SystemVendor
+	a2.Firmware = a1.Firmware
+	a2.RAMMebibytes = a1.RAMMebibytes
+	a2.NIC = a1.NIC
+	a2.Storage = a1.Storage
+	a2.CPU.Arch = a1.CPU.Arch
+	a2.CPU.Model = a1.CPU.Model
+	a2.CPU.ClockMegahertz = ClockSpeed(a1.CPU.ClockMegahertz)
+	a2.CPU.Flags = a1.CPU.Flags
+	a2.CPU.Count = a1.CPU.Count
+	a2.Hostname = a1.Hostname
+}
+
+// UpgradeStatus reads values from a v1alpha1 status into a v1alpha2
+// status.
+func UpgradeStatus(a1Status *metal3v1alpha1.BareMetalHostStatus, status *BareMetalHostStatus) {
+	// Most of the fields use the same types, but the HardwareDetails
+	// are different.
+	status.OperationalStatus = a1Status.OperationalStatus
+	status.ErrorType = a1Status.ErrorType
+	status.LastUpdated = a1Status.LastUpdated
+	status.HardwareProfile = a1Status.HardwareProfile
+	if a1Status.HardwareDetails != nil {
+		status.HardwareDetails = &HardwareDetails{}
+		upgradeHardwareDetails(a1Status.HardwareDetails, status.HardwareDetails)
+	}
+	status.Provisioning = a1Status.Provisioning
+	status.GoodCredentials = a1Status.GoodCredentials
+	status.TriedCredentials = a1Status.TriedCredentials
+	status.ErrorMessage = a1Status.ErrorMessage
+	status.PoweredOn = a1Status.PoweredOn
+	status.OperationHistory = a1Status.OperationHistory
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

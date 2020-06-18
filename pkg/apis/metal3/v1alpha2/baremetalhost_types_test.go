@@ -4,10 +4,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
+	metal3v1alpha1 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha1"
 )
 
 func TestHostAvailable(t *testing.T) {
@@ -664,6 +667,147 @@ func TestGetImageChecksum(t *testing.T) {
 			if actual != tc.Expected {
 				t.Errorf("expected %v but got %v", tc.Expected, actual)
 			}
+		})
+	}
+}
+
+func TestUpgradeStatusHardwareDetails(t *testing.T) {
+	for _, tc := range []struct {
+		Scenario string
+		A1       metal3v1alpha1.BareMetalHostStatus
+		Expected *HardwareDetails
+	}{
+		{
+			Scenario: "nil",
+			A1:       metal3v1alpha1.BareMetalHostStatus{},
+			Expected: nil,
+		},
+		{
+			Scenario: "non-nil empty",
+			A1: metal3v1alpha1.BareMetalHostStatus{
+				HardwareDetails: &metal3v1alpha1.HardwareDetails{},
+			},
+			Expected: &HardwareDetails{},
+		},
+		{
+			Scenario: "complete",
+			A1: metal3v1alpha1.BareMetalHostStatus{
+				HardwareDetails: &metal3v1alpha1.HardwareDetails{
+					SystemVendor: metal3shared.HardwareSystemVendor{
+						Manufacturer: "manufacturer",
+						ProductName:  "product name",
+						SerialNumber: "serial number",
+					},
+					Firmware: metal3shared.Firmware{
+						BIOS: metal3shared.BIOS{
+							Date:    "today",
+							Vendor:  "vendor",
+							Version: "version",
+						},
+					},
+					RAMMebibytes: 5,
+					NIC: []metal3shared.NIC{
+						{
+							Name:      "name",
+							Model:     "model",
+							MAC:       "mac",
+							IP:        "ip",
+							SpeedGbps: 2,
+							VLANs: []metal3shared.VLAN{
+								{
+									ID:   99,
+									Name: "name",
+								},
+							},
+							VLANID: 100,
+							PXE:    true,
+						},
+					},
+					Storage: []metal3shared.Storage{
+						{
+							Name:               "name",
+							Rotational:         true,
+							SizeBytes:          3,
+							Vendor:             "vendor",
+							Model:              "model",
+							SerialNumber:       "serial number",
+							WWN:                "wwn",
+							WWNVendorExtension: "wwn vendor extension",
+							WWNWithExtension:   "wwn with extension",
+							HCTL:               "hctl",
+						},
+					},
+					CPU: metal3v1alpha1.CPU{
+						Arch:  "arch",
+						Model: "model",
+						// We expect this value to be truncated.
+						ClockMegahertz: 2500.999,
+						Flags:          []string{"a", "b", "c"},
+						Count:          2,
+					},
+					Hostname: "hostname",
+				},
+			},
+			Expected: &HardwareDetails{
+				SystemVendor: metal3shared.HardwareSystemVendor{
+					Manufacturer: "manufacturer",
+					ProductName:  "product name",
+					SerialNumber: "serial number",
+				},
+				Firmware: metal3shared.Firmware{
+					BIOS: metal3shared.BIOS{
+						Date:    "today",
+						Vendor:  "vendor",
+						Version: "version",
+					},
+				},
+				RAMMebibytes: 5,
+				NIC: []metal3shared.NIC{
+					{
+						Name:      "name",
+						Model:     "model",
+						MAC:       "mac",
+						IP:        "ip",
+						SpeedGbps: 2,
+						VLANs: []metal3shared.VLAN{
+							{
+								ID:   99,
+								Name: "name",
+							},
+						},
+						VLANID: 100,
+						PXE:    true,
+					},
+				},
+				Storage: []metal3shared.Storage{
+					{
+						Name:               "name",
+						Rotational:         true,
+						SizeBytes:          3,
+						Vendor:             "vendor",
+						Model:              "model",
+						SerialNumber:       "serial number",
+						WWN:                "wwn",
+						WWNVendorExtension: "wwn vendor extension",
+						WWNWithExtension:   "wwn with extension",
+						HCTL:               "hctl",
+					},
+				},
+				CPU: CPU{
+					Arch:           "arch",
+					Model:          "model",
+					ClockMegahertz: 2500,
+					Flags:          []string{"a", "b", "c"},
+					Count:          2,
+				},
+				Hostname: "hostname",
+			},
+		},
+	} {
+		t.Run(tc.Scenario, func(t *testing.T) {
+			actual := &BareMetalHostStatus{}
+			UpgradeStatus(&tc.A1, actual)
+			assert.Equal(t, tc.Expected, actual.HardwareDetails)
 		})
 	}
 }

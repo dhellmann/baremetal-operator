@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 
 	metal3shared "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/shared"
+	metal3v1alpha1 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha1"
 	metal3 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 	"github.com/metal3-io/baremetal-operator/pkg/bmc"
 	"github.com/metal3-io/baremetal-operator/pkg/hardware"
@@ -896,7 +897,13 @@ func marshalStatusAnnotation(status *metal3.BareMetalHostStatus) ([]byte, error)
 func unmarshalStatusAnnotation(content []byte) (*metal3.BareMetalHostStatus, error) {
 	objStatus := &metal3.BareMetalHostStatus{}
 	if err := json.Unmarshal(content, objStatus); err != nil {
-		return nil, errors.Wrap(err, "Failed to fetch Status from annotation")
+		// Try to read the content using the v1alpha1 format.
+		a1Status := &metal3v1alpha1.BareMetalHostStatus{}
+		if err2 := json.Unmarshal(content, a1Status); err2 != nil {
+			// That failed, report the original error.
+			return nil, errors.Wrap(err, "failed to fetch Status from annotation")
+		}
+		metal3.UpgradeStatus(a1Status, objStatus)
 	}
 	return objStatus, nil
 }

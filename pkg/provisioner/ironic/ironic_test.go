@@ -49,7 +49,7 @@ func TestGetUpdateOptsForNodeWithRootHints(t *testing.T) {
 			},
 		},
 		Status: metal3.BareMetalHostStatus{
-			Provisioning: metal3.ProvisionStatus{
+			Provisioning: metal3shared.ProvisionStatus{
 				ID: "provisioning-id",
 				// Place the hints in the status field to pretend the
 				// controller has already reconciled partially.
@@ -147,7 +147,7 @@ func TestGetUpdateOptsForNodeVirtual(t *testing.T) {
 		},
 		Status: metal3.BareMetalHostStatus{
 			HardwareProfile: "libvirt",
-			Provisioning: metal3.ProvisionStatus{
+			Provisioning: metal3shared.ProvisionStatus{
 				ID: "provisioning-id",
 			},
 		},
@@ -242,7 +242,7 @@ func TestGetUpdateOptsForNodeDell(t *testing.T) {
 		},
 		Status: metal3.BareMetalHostStatus{
 			HardwareProfile: "dell",
-			Provisioning: metal3.ProvisionStatus{
+			Provisioning: metal3shared.ProvisionStatus{
 				ID: "provisioning-id",
 			},
 		},

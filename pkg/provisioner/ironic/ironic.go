@@ -77,7 +77,7 @@ type ironicProvisioner struct {
 	// the host to be managed by this provisioner
 	host *metal3.BareMetalHost
 	// a shorter path to the provisioning status data structure
-	status *metal3.ProvisionStatus
+	status *metal3shared.ProvisionStatus
 	// access parameters for the BMC
 	bmcAccess bmc.AccessDetails
 	// credentials to log in to the BMC

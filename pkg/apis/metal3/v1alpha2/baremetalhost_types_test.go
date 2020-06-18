@@ -129,7 +129,7 @@ func TestHostNeedsHardwareInspection(t *testing.T) {
 					Namespace: "myns",
 				},
 				Status: BareMetalHostStatus{
-					Provisioning: ProvisionStatus{
+					Provisioning: metal3shared.ProvisionStatus{
 						Image: metal3shared.Image{
 							URL: "not-empty",
 						},
@@ -237,7 +237,7 @@ func TestHostNeedsProvisioning(t *testing.T) {
 					Online: true,
 				},
 				Status: BareMetalHostStatus{
-					Provisioning: ProvisionStatus{
+					Provisioning: metal3shared.ProvisionStatus{
 						Image: metal3shared.Image{
 							URL: "also-not-empty",
 						},
@@ -262,7 +262,7 @@ func TestHostNeedsProvisioning(t *testing.T) {
 					Online: true,
 				},
 				Status: BareMetalHostStatus{
-					Provisioning: ProvisionStatus{
+					Provisioning: metal3shared.ProvisionStatus{
 						Image: metal3shared.Image{
 							URL: "also-not-empty",
 						},
@@ -368,7 +368,7 @@ func TestHostNeedsDeprovisioning(t *testing.T) {
 					Online: true,
 				},
 				Status: BareMetalHostStatus{
-					Provisioning: ProvisionStatus{
+					Provisioning: metal3shared.ProvisionStatus{
 						Image: metal3shared.Image{
 							URL: "same",
 						},
@@ -389,7 +389,7 @@ func TestHostNeedsDeprovisioning(t *testing.T) {
 					Online: true,
 				},
 				Status: BareMetalHostStatus{
-					Provisioning: ProvisionStatus{
+					Provisioning: metal3shared.ProvisionStatus{
 						Image: metal3shared.Image{
 							URL: "same",
 						},
@@ -413,7 +413,7 @@ func TestHostNeedsDeprovisioning(t *testing.T) {
 					Online: true,
 				},
 				Status: BareMetalHostStatus{
-					Provisioning: ProvisionStatus{
+					Provisioning: metal3shared.ProvisionStatus{
 						Image: metal3shared.Image{
 							URL: "also-not-empty",
 						},

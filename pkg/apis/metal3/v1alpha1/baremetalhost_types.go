@@ -131,7 +131,7 @@ type BareMetalHostStatus struct {
 	HardwareDetails *HardwareDetails `json:"hardware,omitempty"`
 
 	// Information tracked by the provisioner.
-	Provisioning ProvisionStatus `json:"provisioning"`
+	Provisioning metal3shared.ProvisionStatus `json:"provisioning"`
 
 	// the last credentials we were able to validate as working
 	GoodCredentials metal3shared.CredentialsStatus `json:"goodCredentials,omitempty"`
@@ -148,22 +148,6 @@ type BareMetalHostStatus struct {
 	// OperationHistory holds information about operations performed
 	// on this host.
 	OperationHistory metal3shared.OperationHistory `json:"operationHistory"`
-}
-
-// ProvisionStatus holds the state information for a single target.
-type ProvisionStatus struct {
-	// An indiciator for what the provisioner is doing with the host.
-	State metal3shared.ProvisioningState `json:"state"`
-
-	// The machine's UUID from the underlying provisioning tool
-	ID string `json:"ID"`
-
-	// Image holds the details of the last image successfully
-	// provisioned to the host.
-	Image metal3shared.Image `json:"image,omitempty"`
-
-	// The RootDevicehints set by the user
-	RootDeviceHints *metal3shared.RootDeviceHints `json:"rootDeviceHints,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

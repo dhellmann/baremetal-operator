@@ -190,8 +190,17 @@ func (r *ReconcileBareMetalHost) Reconcile(request reconcile.Request) (result re
 			// finalizers.  Return and don't requeue
 			return reconcile.Result{}, nil
 		}
-		// Error reading the object - requeue the request.
-		return reconcile.Result{}, errors.Wrap(err, "could not load host data")
+
+		// Try to upgrade from a v1alpha1 version of the resource.
+		v1a1host := &metal3v1alpha1.BareMetalHost{}
+		err2 := r.client.Get(context.TODO(), request.NamespacedName, v1a1host)
+		if err2 != nil {
+			reqLogger.Error(err2, "failed to fetch host for update from v1alpha1 format")
+			// Error reading the object - requeue the request.
+			return reconcile.Result{}, errors.Wrap(err, "could not load host data")
+		}
+
+		return reconcile.Result{}, errors.Wrap(err, "need to update host format")
 	}
 
 	// If the reconciliation is paused, requeue

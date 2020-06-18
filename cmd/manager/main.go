@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -18,6 +19,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+
+	metal3v1alpha1 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha1"
+	metal3v1alpha2 "github.com/metal3-io/baremetal-operator/pkg/apis/metal3/v1alpha2"
 )
 
 var (
@@ -74,20 +78,47 @@ func main() {
 		MetricsBindAddress:      *metricsAddr,
 	}
 
-	// Create a new Cmd to provide shared dependencies and start components
+	// Create a new manager to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, opts)
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}
 
-	log.Info("Registering Components.")
-
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}
+
+	log.Info("Registering Components.")
+
+	var upgradeV1Alpha1 manager.RunnableFunc = func(stop <-chan struct{}) error {
+		log := logf.Log.WithName("v1alpha1-upgrade")
+		log.Info("looking for BareMetalHosts to upgrade")
+
+		client := mgr.GetClient()
+
+		hosts := &metal3v1alpha1.BareMetalHostList{}
+		if err := client.List(context.TODO(), hosts); err != nil {
+			log.Error(err, "")
+			return err
+		}
+
+		for _, host := range hosts.Items {
+			log.Info(fmt.Sprintf("host %s", host.Name))
+			newHost := &metal3v1alpha2.BareMetalHost{}
+			metal3v1alpha2.UpgradeHost(&host, newHost)
+			err := client.Status().Update(context.TODO(), newHost)
+			if err != nil {
+				log.Error(err, fmt.Sprintf("failed to update host %s", host.Name))
+			}
+		}
+
+		log.Info("upgrade done")
+		return nil
+	}
+	mgr.Add(upgradeV1Alpha1)
 
 	// Setup all Controllers
 	if err := controller.AddToManager(mgr); err != nil {

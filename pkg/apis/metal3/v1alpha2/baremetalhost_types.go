@@ -186,6 +186,27 @@ func UpgradeStatus(a1Status *metal3v1alpha1.BareMetalHostStatus, status *BareMet
 	status.OperationHistory = a1Status.OperationHistory
 }
 
+// UpgradeHost reads values from a v1alpha1 host into a v1alpha2 host.
+func UpgradeHost(a1 *metal3v1alpha1.BareMetalHost, a2 *BareMetalHost) {
+	a2.ObjectMeta = a1.ObjectMeta
+	a2.TypeMeta = a1.TypeMeta
+
+	a2.Spec.Taints = a1.Spec.Taints
+	a2.Spec.BMC = a1.Spec.BMC
+	a2.Spec.RootDeviceHints = a1.Spec.RootDeviceHints
+	a2.Spec.BootMACAddress = a1.Spec.BootMACAddress
+	a2.Spec.Online = a1.Spec.Online
+	a2.Spec.ConsumerRef = a1.Spec.ConsumerRef
+	a2.Spec.Image = a1.Spec.Image
+	a2.Spec.UserData = a1.Spec.UserData
+	a2.Spec.NetworkData = a1.Spec.NetworkData
+	a2.Spec.MetaData = a1.Spec.MetaData
+	a2.Spec.Description = a1.Spec.Description
+	a2.Spec.ExternallyProvisioned = a1.Spec.ExternallyProvisioned
+
+	UpgradeStatus(&a1.Status, &a2.Status)
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // BareMetalHost is the Schema for the baremetalhosts API

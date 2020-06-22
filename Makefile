@@ -18,6 +18,9 @@ export IRONIC_INSPECTOR_ENDPOINT=http://localhost:5050/v1/
 export GO111MODULE=on
 export GOFLAGS=
 
+CONTROLLER_GEN=./tools/bin/controller-gen
+CRD_OPTIONS ?= "crd:trivialVersions=true"
+
 .PHONY: help
 help:  ## Display this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
@@ -32,9 +35,13 @@ help:  ## Display this help
 test: fmt generate lint vet unit ## Run common developer tests
 
 .PHONY: generate
-generate: bin/operator-sdk ## Run the operator-sdk code generator
-	./bin/operator-sdk generate $(VERBOSE) k8s
-	./bin/operator-sdk generate $(VERBOSE) crds
+generate: $(CONTROLLER_GEN)
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) \
+		rbac:roleName=manager-role \
+		webhook \
+		paths="./..." \
+		output:crd:artifacts:config=deploy/crds
 	openapi-gen \
 		--input-dirs ./pkg/apis/metal3/v1alpha1 \
 		--output-package ./pkg/apis/metal3/v1alpha1 \
@@ -165,3 +172,10 @@ tools:
 deploy:
 	cd deploy && kustomize edit set namespace $(RUN_NAMESPACE) && cd ..
 	kustomize build deploy | kubectl apply -f -
+
+$(CONTROLLER_GEN): tools/bin
+	cd tools/controller-tools && go build ./cmd/controller-gen
+	cp tools/controller-tools/controller-gen tools/bin/
+
+tools/bin:
+	mkdir -p tools/bin

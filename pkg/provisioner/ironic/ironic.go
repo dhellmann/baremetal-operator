@@ -369,6 +369,7 @@ func (p *ironicProvisioner) ValidateManagementAccess(credentialsChanged bool) (r
 				BootInterface:       p.bmcAccess.BootInterface(),
 				Name:                p.host.Name,
 				DriverInfo:          driverInfo,
+				DeployInterface:     p.deployInterface(),
 				InspectInterface:    "inspector",
 				ManagementInterface: p.bmcAccess.ManagementInterface(),
 				PowerInterface:      p.bmcAccess.PowerInterface(),
@@ -413,7 +414,12 @@ func (p *ironicProvisioner) ValidateManagementAccess(credentialsChanged bool) (r
 		// case may mean we are re-adopting a host that was already
 		// known but removed/lost because the pod restarted.
 		var imageData *metal3v1alpha1.Image
+		var liveImageData *metal3v1alpha1.LiveImage
 		switch {
+		case p.host.Status.Provisioning.LiveImage.URL != "":
+			liveImageData = &p.host.Status.Provisioning.LiveImage
+		case p.host.Spec.LiveImage != nil && p.host.Spec.LiveImage.URL != "":
+			liveImageData = p.host.Spec.LiveImage
 		case p.host.Status.Provisioning.Image.URL != "":
 			imageData = &p.host.Status.Provisioning.Image
 		case p.host.Spec.Image != nil && p.host.Spec.Image.URL != "":
@@ -421,8 +427,8 @@ func (p *ironicProvisioner) ValidateManagementAccess(credentialsChanged bool) (r
 		}
 
 		_, _, ok := imageData.GetChecksum()
-		if ok {
-			updates, err := p.getImageUpdateOptsForNode(ironicNode, imageData)
+		if ok || liveImageData != nil {
+			updates, err := p.getImageUpdateOptsForNode(ironicNode, imageData, liveImageData)
 			if err != nil {
 				return result, errors.Wrap(err, "Could not get Image options for node")
 			}
@@ -723,93 +729,121 @@ func (p *ironicProvisioner) UpdateHardwareState() (result provisioner.Result, er
 	return result, nil
 }
 
-func (p *ironicProvisioner) getImageUpdateOptsForNode(ironicNode *nodes.Node, imageData *metal3v1alpha1.Image) (updates nodes.UpdateOpts, err error) {
-	// image_source
+func (p *ironicProvisioner) getImageUpdateOptsForNode(ironicNode *nodes.Node, imageData *metal3v1alpha1.Image, liveImageData *metal3v1alpha1.LiveImage) (updates nodes.UpdateOpts, err error) {
 	var op nodes.UpdateOp
-	if _, ok := ironicNode.InstanceInfo["image_source"]; !ok {
-		op = nodes.AddOp
-		p.log.Info("adding image_source")
-	} else {
-		op = nodes.ReplaceOp
-		p.log.Info("updating image_source")
-	}
-	updates = append(
-		updates,
-		nodes.UpdateOperation{
-			Op:    op,
-			Path:  "/instance_info/image_source",
-			Value: imageData.URL,
-		},
-	)
-
-	checksum, checksumType, _ := p.host.GetImageChecksum()
-
-	// image_os_hash_algo
-	if _, ok := ironicNode.InstanceInfo["image_os_hash_algo"]; !ok {
-		op = nodes.AddOp
-		p.log.Info("adding image_os_hash_algo")
-	} else {
-		op = nodes.ReplaceOp
-		p.log.Info("updating image_os_hash_algo")
-	}
-	updates = append(
-		updates,
-		nodes.UpdateOperation{
-			Op:    op,
-			Path:  "/instance_info/image_os_hash_algo",
-			Value: checksumType,
-		},
-	)
-
-	// image_os_hash_value
-	if _, ok := ironicNode.InstanceInfo["image_os_hash_value"]; !ok {
-		op = nodes.AddOp
-		p.log.Info("adding image_os_hash_value")
-	} else {
-		op = nodes.ReplaceOp
-		p.log.Info("updating image_os_hash_value")
-	}
-	updates = append(
-		updates,
-		nodes.UpdateOperation{
-			Op:    op,
-			Path:  "/instance_info/image_os_hash_value",
-			Value: checksum,
-		},
-	)
-
-	// image_checksum
-	//
-	// FIXME: For older versions of ironic that do not have
-	// https://review.opendev.org/#/c/711816/ failing to include the
-	// 'image_checksum' causes ironic to refuse to provision the
-	// image, even if the other hash value parameters are given. We
-	// only want to do that for MD5, however, because those versions
-	// of ironic only support MD5 checksums.
-	if checksumType == string(metal3v1alpha1.MD5) {
-		if _, ok := ironicNode.InstanceInfo["image_checksum"]; !ok {
+	if imageData != nil {
+		// image_source
+		if _, ok := ironicNode.InstanceInfo["image_source"]; !ok {
 			op = nodes.AddOp
-			p.log.Info("adding image_checksum")
+			p.log.Info("adding image_source")
 		} else {
 			op = nodes.ReplaceOp
-			p.log.Info("updating image_checksum")
+			p.log.Info("updating image_source")
 		}
 		updates = append(
 			updates,
 			nodes.UpdateOperation{
 				Op:    op,
-				Path:  "/instance_info/image_checksum",
+				Path:  "/instance_info/image_source",
+				Value: imageData.URL,
+			},
+		)
+
+		checksum, checksumType, _ := p.host.GetImageChecksum()
+
+		// image_os_hash_algo
+		if _, ok := ironicNode.InstanceInfo["image_os_hash_algo"]; !ok {
+			op = nodes.AddOp
+			p.log.Info("adding image_os_hash_algo")
+		} else {
+			op = nodes.ReplaceOp
+			p.log.Info("updating image_os_hash_algo")
+		}
+		updates = append(
+			updates,
+			nodes.UpdateOperation{
+				Op:    op,
+				Path:  "/instance_info/image_os_hash_algo",
+				Value: checksumType,
+			},
+		)
+
+		// image_os_hash_value
+		if _, ok := ironicNode.InstanceInfo["image_os_hash_value"]; !ok {
+			op = nodes.AddOp
+			p.log.Info("adding image_os_hash_value")
+		} else {
+			op = nodes.ReplaceOp
+			p.log.Info("updating image_os_hash_value")
+		}
+		updates = append(
+			updates,
+			nodes.UpdateOperation{
+				Op:    op,
+				Path:  "/instance_info/image_os_hash_value",
 				Value: checksum,
 			},
 		)
-	}
 
-	if imageData.DiskFormat != nil {
-		updates = append(updates, nodes.UpdateOperation{
-			Op:    nodes.AddOp,
-			Path:  "/instance_info/image_disk_format",
-			Value: *imageData.DiskFormat,
-		})
+		// image_checksum
+		//
+		// FIXME: For older versions of ironic that do not have
+		// https://review.opendev.org/#/c/711816/ failing to include the
+		// 'image_checksum' causes ironic to refuse to provision the
+		// image, even if the other hash value parameters are given. We
+		// only want to do that for MD5, however, because those versions
+		// of ironic only support MD5 checksums.
+		if checksumType == string(metal3v1alpha1.MD5) {
+			if _, ok := ironicNode.InstanceInfo["image_checksum"]; !ok {
+				op = nodes.AddOp
+				p.log.Info("adding image_checksum")
+			} else {
+				op = nodes.ReplaceOp
+				p.log.Info("updating image_checksum")
+			}
+			updates = append(
+				updates,
+				nodes.UpdateOperation{
+					Op:    op,
+					Path:  "/instance_info/image_checksum",
+					Value: checksum,
+				},
+			)
+		}
+
+		if imageData.DiskFormat != nil {
+			updates = append(updates, nodes.UpdateOperation{
+				Op:    nodes.AddOp,
+				Path:  "/instance_info/image_disk_format",
+				Value: *imageData.DiskFormat,
+			})
+		}
+	} else if liveImageData != nil {
+		if _, ok := ironicNode.InstanceInfo["boot_iso"]; !ok {
+			op = nodes.AddOp
+			p.log.Info("adding boot_iso")
+		} else {
+			op = nodes.ReplaceOp
+			p.log.Info("updating boot_iso")
+		}
+		updates = append(
+			updates,
+			nodes.UpdateOperation{
+				Op:    op,
+				Path:  "/instance_info/boot_iso",
+				Value: liveImageData.URL,
+			},
+		)
+		updates = append(
+			updates,
+			nodes.UpdateOperation{
+				Op:    nodes.ReplaceOp,
+				Path:  "/deploy_interface",
+				Value: "ramdisk",
+			},
+		)
+	} else {
+		return nil, errors.New("No image or liveImage specified")
 	}
 	return updates, nil
 }
@@ -824,7 +858,7 @@ func (p *ironicProvisioner) getUpdateOptsForNode(ironicNode *nodes.Node) (update
 				p.host.HardwareProfile()))
 	}
 
-	imageOpts, err := p.getImageUpdateOptsForNode(ironicNode, p.host.Spec.Image)
+	imageOpts, err := p.getImageUpdateOptsForNode(ironicNode, p.host.Spec.Image, p.host.Spec.LiveImage)
 	if err != nil {
 		return updates, errors.Wrap(err, "Could not get Image options for node")
 	}
@@ -1038,8 +1072,24 @@ func (p *ironicProvisioner) setUpForProvisioning(ironicNode *nodes.Node, hostCon
 		"deploy step", ironicNode.DeployStep,
 	)
 	p.publisher("ProvisioningStarted",
-		fmt.Sprintf("Image provisioning started for %s", p.host.Spec.Image.URL))
+		fmt.Sprintf("Image provisioning started for %s", p.imageURL()))
 	return
+}
+
+func (p *ironicProvisioner) imageURL() (url string) {
+	url = p.host.Spec.Image.URL
+	if p.host.Spec.LiveImage != nil && p.host.Spec.LiveImage.URL != "" {
+		url = p.host.Spec.LiveImage.URL
+	}
+	return url
+}
+
+func (p *ironicProvisioner) deployInterface() (result string) {
+	result = "direct"
+	if p.host.Spec.LiveImage != nil && p.host.Spec.LiveImage.URL != "" {
+		result = "ramdisk"
+	}
+	return result
 }
 
 // Adopt allows an externally-provisioned server to be adopted by Ironic.
@@ -1087,6 +1137,30 @@ func (p *ironicProvisioner) Adopt(force bool) (result provisioner.Result, err er
 	return
 }
 
+func (p *ironicProvisioner) ironicHasSameImage(ironicNode *nodes.Node) (sameImage bool) {
+	// To make it easier to test if ironic is configured with
+	// the same image we are trying to provision to the host.
+	if p.host.Spec.LiveImage != nil && p.host.Spec.LiveImage.URL != "" {
+		sameImage = (ironicNode.InstanceInfo["boot_iso"] == p.host.Spec.LiveImage.URL)
+		p.log.Info("checking image settings",
+			"boot_iso", ironicNode.InstanceInfo["boot_iso"],
+			"same", sameImage,
+			"provisionState", ironicNode.ProvisionState)
+	} else {
+		checksum, checksumType, _ := p.host.GetImageChecksum()
+		sameImage = (ironicNode.InstanceInfo["image_source"] == p.host.Spec.Image.URL &&
+			ironicNode.InstanceInfo["image_os_hash_algo"] == checksumType &&
+			ironicNode.InstanceInfo["image_os_hash_value"] == checksum)
+		p.log.Info("checking image settings",
+			"source", ironicNode.InstanceInfo["image_source"],
+			"image_os_hash_algo", checksumType,
+			"image_os_has_value", checksum,
+			"same", sameImage,
+			"provisionState", ironicNode.ProvisionState)
+	}
+	return sameImage
+}
+
 // Provision writes the image from the host spec to the host. It may
 // be called multiple times, and should return true for its dirty flag
 // until the deprovisioning operation is completed.
@@ -1102,20 +1176,7 @@ func (p *ironicProvisioner) Provision(hostConf provisioner.HostConfigData) (resu
 
 	p.log.Info("provisioning image to host", "state", ironicNode.ProvisionState)
 
-	checksum, checksumType, _ := p.host.GetImageChecksum()
-
-	// Local variable to make it easier to test if ironic is
-	// configured with the same image we are trying to provision to
-	// the host.
-	ironicHasSameImage := (ironicNode.InstanceInfo["image_source"] == p.host.Spec.Image.URL &&
-		ironicNode.InstanceInfo["image_os_hash_algo"] == checksumType &&
-		ironicNode.InstanceInfo["image_os_hash_value"] == checksum)
-	p.log.Info("checking image settings",
-		"source", ironicNode.InstanceInfo["image_source"],
-		"image_os_hash_algo", checksumType,
-		"image_os_has_value", checksum,
-		"same", ironicHasSameImage,
-		"provisionState", ironicNode.ProvisionState)
+	ironicHasSameImage := p.ironicHasSameImage(ironicNode)
 
 	result.RequeueAfter = provisionRequeueDelay
 
@@ -1232,7 +1293,7 @@ func (p *ironicProvisioner) Provision(hostConf provisioner.HostConfigData) (resu
 	case nodes.Active:
 		// provisioning is done
 		p.publisher("ProvisioningComplete",
-			fmt.Sprintf("Image provisioning completed for %s", p.host.Spec.Image.URL))
+			fmt.Sprintf("Image provisioning completed for %s", p.imageURL()))
 		p.log.Info("finished provisioning")
 		return result, nil
 

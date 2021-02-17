@@ -340,27 +340,29 @@ func (r *BareMetalHostReconciler) credentialsErrorResult(err error, request ctrl
 
 // hasRebootAnnotation checks for existence of reboot annotations and returns true if at least one exist
 func hasRebootAnnotation(info *reconcileInfo) (hasReboot bool, rebootMode metal3v1alpha1.RebootMode) {
+	rebootMode = metal3v1alpha1.RebootModeSoft
+
 	for annotation, value := range info.host.GetAnnotations() {
-		// Don't use a break here as we may have multiple clients setting
-		// reboot annotations and we always want hard requests honoured
 		if isRebootAnnotation(annotation) {
 			hasReboot = true
-			if isHardReboot(value, info) {
-				rebootMode = metal3v1alpha1.RebootModeHard
-			} else {
-				rebootMode = metal3v1alpha1.RebootModeSoft
+			newRebootMode := getRebootMode(value, info)
+			// If any annotation has asked for a hard reboot, that
+			// mode takes precedence.
+			if newRebootMode == metal3v1alpha1.RebootModeHard {
+				rebootMode = newRebootMode
 			}
+			// Don't use a break here as we may have multiple clients setting
+			// reboot annotations and we always want hard requests honoured
 		}
 	}
 	return
 }
 
-// isHardReboot checks if reboot annotation requests a hard reboot and returns true if so
-func isHardReboot(annotation string, info *reconcileInfo) bool {
+func getRebootMode(annotation string, info *reconcileInfo) metal3v1alpha1.RebootMode {
 
 	if annotation == "" {
 		info.log.Info("No reboot annotation value specified, assuming soft-reboot.")
-		return false
+		return metal3v1alpha1.RebootModeSoft
 	}
 
 	annotations := metal3v1alpha1.RebootAnnotationArguments{}
@@ -368,12 +370,9 @@ func isHardReboot(annotation string, info *reconcileInfo) bool {
 	if err != nil {
 		info.publishEvent("InvalidAnnotationValue", fmt.Sprintf("could not parse reboot annotation (%s) - invalid json, assuming soft-reboot", annotation))
 		info.log.Info(fmt.Sprintf("Could not parse reboot annotation (%q) - invalid json, assuming soft-reboot", annotation))
-		return false
+		return metal3v1alpha1.RebootModeSoft
 	}
-	if annotations.Mode == metal3v1alpha1.RebootModeHard {
-		return true
-	}
-	return false
+	return annotations.Mode
 }
 
 // isRebootAnnotation returns true if the provided annotation is a reboot annotation (either suffixed or not)

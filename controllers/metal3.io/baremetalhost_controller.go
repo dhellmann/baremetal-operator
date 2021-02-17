@@ -339,14 +339,16 @@ func (r *BareMetalHostReconciler) credentialsErrorResult(err error, request ctrl
 }
 
 // hasRebootAnnotation checks for existence of reboot annotations and returns true if at least one exist
-func hasRebootAnnotation(info *reconcileInfo) (hasReboot, hardMode bool) {
+func hasRebootAnnotation(info *reconcileInfo) (hasReboot bool, rebootMode metal3v1alpha1.RebootMode) {
 	for annotation, value := range info.host.GetAnnotations() {
 		// Don't use a break here as we may have multiple clients setting
 		// reboot annotations and we always want hard requests honoured
 		if isRebootAnnotation(annotation) {
 			hasReboot = true
 			if isHardReboot(value, info) {
-				hardMode = true
+				rebootMode = metal3v1alpha1.RebootModeHard
+			} else {
+				rebootMode = metal3v1alpha1.RebootModeSoft
 			}
 		}
 	}
@@ -356,23 +358,19 @@ func hasRebootAnnotation(info *reconcileInfo) (hasReboot, hardMode bool) {
 // isHardReboot checks if reboot annotation requests a hard reboot and returns true if so
 func isHardReboot(annotation string, info *reconcileInfo) bool {
 
-	type RebootAnnotationArguments struct {
-		Mode	metal3v1alpha1.RebootAnnotation	`json:"mode"`
-	}
-
 	if annotation == "" {
 		info.log.Info("No reboot annotation value specified, assuming soft-reboot.")
 		return false
 	}
 
-	annotations := RebootAnnotationArguments{}
+	annotations := metal3v1alpha1.RebootAnnotationArguments{}
 	err := json.Unmarshal([]byte(annotation), &annotations)
 	if err != nil {
 		info.publishEvent("InvalidAnnotationValue", fmt.Sprintf("could not parse reboot annotation (%s) - invalid json, assuming soft-reboot", annotation))
 		info.log.Info(fmt.Sprintf("Could not parse reboot annotation (%q) - invalid json, assuming soft-reboot", annotation))
 		return false
 	}
-	if annotations.Mode == metal3v1alpha1.RebootAnnotationHard {
+	if annotations.Mode == metal3v1alpha1.RebootModeHard {
 		return true
 	}
 	return false
@@ -812,7 +810,7 @@ func (r *BareMetalHostReconciler) manageHostPower(prov provisioner.Provisioner, 
 	info.log.Info("power state change needed",
 		"expected", desiredPowerOnState,
 		"actual", info.host.Status.PoweredOn,
-		"hard reboot", desiredHardReboot,
+		"reboot mode", desiredHardReboot,
 		"reboot process", desiredPowerOnState != info.host.Spec.Online)
 
 	if desiredPowerOnState {

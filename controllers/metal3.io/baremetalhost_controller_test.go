@@ -372,38 +372,38 @@ func TestHasRebootAnnotation(t *testing.T) {
 	info := makeReconcileInfo(host)
 	host.Annotations = make(map[string]string)
 
-	hasReboot, hardMode := hasRebootAnnotation(info)
+	hasReboot, rebootMode := hasRebootAnnotation(info)
 	assert.False(t, hasReboot)
-	assert.False(t, hardMode)
+	assert.Equal(t, rebootMode, metal3v1alpha1.RebootMode(""))
 
 	host.Annotations = make(map[string]string)
 	suffixedAnnotation := rebootAnnotationPrefix + "/foo"
 	host.Annotations[suffixedAnnotation] = ""
 
-	hasReboot, hardMode = hasRebootAnnotation(info)
+	hasReboot, rebootMode = hasRebootAnnotation(info)
 	assert.True(t, hasReboot)
-	assert.False(t, hardMode)
+	assert.Equal(t, rebootMode, metal3v1alpha1.RebootModeSoft)
 
 	delete(host.Annotations, suffixedAnnotation)
 	host.Annotations[rebootAnnotationPrefix] = ""
 
-	hasReboot, hardMode = hasRebootAnnotation(info)
+	hasReboot, rebootMode = hasRebootAnnotation(info)
 	assert.True(t, hasReboot)
-	assert.False(t, hardMode)
+	assert.Equal(t, rebootMode, metal3v1alpha1.RebootModeSoft)
 
 	host.Annotations[suffixedAnnotation] = ""
 
-	hasReboot, hardMode = hasRebootAnnotation(info)
+	hasReboot, rebootMode = hasRebootAnnotation(info)
 	assert.True(t, hasReboot)
-	assert.False(t, hardMode)
+	assert.Equal(t, rebootMode, metal3v1alpha1.RebootModeSoft)
 
 	//two suffixed annotations to simulate multiple clients
 
 	host.Annotations[suffixedAnnotation+"bar"] = ""
 
-	hasReboot, hardMode = hasRebootAnnotation(info)
+	hasReboot, rebootMode = hasRebootAnnotation(info)
 	assert.True(t, hasReboot)
-	assert.False(t, hardMode)
+	assert.Equal(t, rebootMode, metal3v1alpha1.RebootModeSoft)
 }
 
 func TestHasHardRebootAnnotation(t *testing.T) {
@@ -411,45 +411,45 @@ func TestHasHardRebootAnnotation(t *testing.T) {
 	info := makeReconcileInfo(host)
 	host.Annotations = make(map[string]string)
 
-	hasReboot, hardMode := hasRebootAnnotation(info)
+	hasReboot, rebootMode := hasRebootAnnotation(info)
 	assert.False(t, hasReboot)
-	assert.False(t, hardMode)
+	assert.Equal(t, rebootMode, metal3v1alpha1.RebootMode(""))
 
 	host.Annotations = make(map[string]string)
 	suffixedAnnotation := rebootAnnotationPrefix + "/foo/"
 	host.Annotations[suffixedAnnotation] = "{\"mode\": \"hard\"}"
 
-	hasReboot, hardMode = hasRebootAnnotation(info)
+	hasReboot, rebootMode = hasRebootAnnotation(info)
 	assert.True(t, hasReboot)
-	assert.True(t, hardMode)
+	assert.Equal(t, rebootMode, metal3v1alpha1.RebootModeHard)
 
 	delete(host.Annotations, suffixedAnnotation)
 	host.Annotations[rebootAnnotationPrefix] = "{\"mode\": \"soft\"}"
 
-	hasReboot, hardMode = hasRebootAnnotation(info)
+	hasReboot, rebootMode = hasRebootAnnotation(info)
 	assert.True(t, hasReboot)
-	assert.False(t, hardMode)
+	assert.Equal(t, rebootMode, metal3v1alpha1.RebootModeSoft)
 
 	delete(host.Annotations, suffixedAnnotation)
 	host.Annotations[rebootAnnotationPrefix] = "{\"bad\"= \"json\"]"
 
-	hasReboot, hardMode = hasRebootAnnotation(info)
+	hasReboot, rebootMode = hasRebootAnnotation(info)
 	assert.True(t, hasReboot)
-	assert.False(t, hardMode)
+	assert.Equal(t, rebootMode, metal3v1alpha1.RebootModeSoft)
 
 	host.Annotations[suffixedAnnotation] = ""
 
-	hasReboot, hardMode = hasRebootAnnotation(info)
+	hasReboot, rebootMode = hasRebootAnnotation(info)
 	assert.True(t, hasReboot)
-	assert.False(t, hardMode)
+	assert.Equal(t, rebootMode, metal3v1alpha1.RebootModeSoft)
 
 	//two suffixed annotations to simulate multiple clients
 
 	host.Annotations[suffixedAnnotation+"bar"] = "{\"mode\": \"hard\"}"
 
-	hasReboot, hardMode = hasRebootAnnotation(info)
+	hasReboot, rebootMode = hasRebootAnnotation(info)
 	assert.True(t, hasReboot)
-	assert.True(t, hardMode)
+	assert.Equal(t, rebootMode, metal3v1alpha1.RebootModeHard)
 }
 
 // TestRebootWithSuffixlessAnnotation tests full reboot cycle with suffixless

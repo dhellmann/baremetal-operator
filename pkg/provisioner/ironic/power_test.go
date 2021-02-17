@@ -151,9 +151,8 @@ func TestPowerOff(t *testing.T) {
 				TargetProvisionState: "",
 				UUID:                 nodeUUID,
 			}),
-			expectedDirty: 	true,
-			rebootMode:	metal3v1alpha1.RebootModeSoft,
-
+			expectedDirty: true,
+			rebootMode:    metal3v1alpha1.RebootModeSoft,
 		},
 		{
 			name: "power-off hard",
@@ -163,8 +162,8 @@ func TestPowerOff(t *testing.T) {
 				TargetProvisionState: "",
 				UUID:                 nodeUUID,
 			}),
-			expectedDirty:	true,
-			rebootMode:	metal3v1alpha1.RebootModeHard,
+			expectedDirty: true,
+			rebootMode:    metal3v1alpha1.RebootModeHard,
 		},
 		{
 			name: "power-off wait for Provisioning state",

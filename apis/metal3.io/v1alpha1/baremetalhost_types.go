@@ -492,7 +492,7 @@ const (
 )
 
 type RebootAnnotationArguments struct {
-	Mode	RebootMode	`json:"mode"`
+	Mode RebootMode `json:"mode"`
 }
 
 // Match compares the saved status information with the name and
